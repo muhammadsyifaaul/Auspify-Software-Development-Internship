@@ -162,6 +162,9 @@ function saveTransactions() {
 function setupEventListeners() {
   searchBookInput.addEventListener('input', renderBookshelf);
 
+  // All Bookshelf button reset
+  navAllBooks.addEventListener('click', () => selectGenre(''));
+
   // Drawer
   openCirculationDrawerBtn.addEventListener('click', openCircDrawer);
   navCirculation.addEventListener('click', openCircDrawer);
@@ -184,17 +187,28 @@ function setupEventListeners() {
 
 function selectGenre(genre) {
   selectedGenreFilter = genre;
+
+  // Move active class and yellow dot indicator
   document.querySelectorAll('.genre-nav-btn').forEach(btn => {
-    btn.classList.remove('bg-white/10', 'text-white');
-    btn.classList.add('text-emerald-200/70');
+    const btnGenre = btn.getAttribute('data-genre') || '';
+    const dot = btn.querySelector('.genre-dot');
+    if (btnGenre === genre) {
+      btn.className = 'genre-nav-btn active w-full text-left px-3 py-1.5 rounded-lg bg-white/10 text-white font-semibold transition flex items-center justify-between text-xs';
+      if (dot) dot.className = 'genre-dot w-2 h-2 rounded-full bg-amber-400 shadow-xs';
+    } else {
+      btn.className = 'genre-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-emerald-200/70 hover:text-white hover:bg-white/5 transition flex items-center justify-between text-xs';
+      if (dot) dot.className = 'genre-dot w-2 h-2 rounded-full bg-emerald-700/60';
+    }
   });
 
   if (genre) {
     currentShelfTitle.textContent = `${genre} Shelf`;
     shelfSubtitle.textContent = `Viewing selected technical collection in ${genre}`;
+    navAllBooks.className = 'w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 text-emerald-200/80 font-medium transition';
   } else {
     currentShelfTitle.textContent = 'Library Catalog';
     shelfSubtitle.textContent = 'Browsing all cataloged volumes and textbooks';
+    navAllBooks.className = 'w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/10 text-white font-medium transition';
   }
 
   renderBookshelf();
@@ -396,10 +410,21 @@ function renderAll() {
 }
 
 function updateBadges() {
-  navTotalBooksBadge.textContent = books.length;
   const activeLoans = transactions.filter(t => t.status === 'Active');
   navLoansBadge.textContent = activeLoans.length;
   loanBadgeCounter.textContent = activeLoans.length;
+
+  // Update counts for each genre shelf
+  const countAll = document.getElementById('countAllGenres');
+  if (countAll) countAll.textContent = books.length;
+  const countSE = document.getElementById('countSoftwareEng');
+  if (countSE) countSE.textContent = books.filter(b => b.category === 'Software Engineering').length;
+  const countCS = document.getElementById('countCompSci');
+  if (countCS) countCS.textContent = books.filter(b => b.category === 'Computer Science').length;
+  const countAI = document.getElementById('countAI');
+  if (countAI) countAI.textContent = books.filter(b => b.category === 'Artificial Intelligence').length;
+  const countDB = document.getElementById('countDb');
+  if (countDB) countDB.textContent = books.filter(b => b.category === 'Database Systems').length;
 }
 
 function renderBookshelf() {
@@ -416,6 +441,7 @@ function renderBookshelf() {
   });
 
   bookCountBadge.textContent = `${filtered.length} Titles Listed`;
+  navTotalBooksBadge.textContent = filtered.length;
 
   if (filtered.length === 0) {
     bookshelfGrid.innerHTML = '';

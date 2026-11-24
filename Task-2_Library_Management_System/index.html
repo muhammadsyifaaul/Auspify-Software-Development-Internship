@@ -50,25 +50,40 @@
       <div class="space-y-1 text-xs pt-2">
         <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-400/60 px-3 py-1">Genre Shelves</p>
         <div id="genreNavList" class="space-y-0.5">
-          <button onclick="selectGenre('')" class="genre-nav-btn active w-full text-left px-3 py-1.5 rounded-lg text-emerald-200 hover:text-white hover:bg-white/5 transition flex items-center space-x-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-            <span>All Genres</span>
+          <button onclick="selectGenre('')" data-genre="" class="genre-nav-btn w-full text-left px-3 py-1.5 rounded-lg transition flex items-center justify-between text-xs">
+            <span class="flex items-center space-x-2">
+              <span class="genre-dot w-2 h-2 rounded-full bg-amber-400"></span>
+              <span class="genre-label">All Genres</span>
+            </span>
+            <span class="genre-count text-[10px] font-mono opacity-80" id="countAllGenres">0</span>
           </button>
-          <button onclick="selectGenre('Software Engineering')" class="genre-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-emerald-200/70 hover:text-white hover:bg-white/5 transition flex items-center space-x-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
-            <span>Software Engineering</span>
+          <button onclick="selectGenre('Software Engineering')" data-genre="Software Engineering" class="genre-nav-btn w-full text-left px-3 py-1.5 rounded-lg transition flex items-center justify-between text-xs">
+            <span class="flex items-center space-x-2">
+              <span class="genre-dot w-2 h-2 rounded-full bg-emerald-700/60"></span>
+              <span class="genre-label">Software Engineering</span>
+            </span>
+            <span class="genre-count text-[10px] font-mono opacity-80" id="countSoftwareEng">0</span>
           </button>
-          <button onclick="selectGenre('Computer Science')" class="genre-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-emerald-200/70 hover:text-white hover:bg-white/5 transition flex items-center space-x-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
-            <span>Computer Science</span>
+          <button onclick="selectGenre('Computer Science')" data-genre="Computer Science" class="genre-nav-btn w-full text-left px-3 py-1.5 rounded-lg transition flex items-center justify-between text-xs">
+            <span class="flex items-center space-x-2">
+              <span class="genre-dot w-2 h-2 rounded-full bg-emerald-700/60"></span>
+              <span class="genre-label">Computer Science</span>
+            </span>
+            <span class="genre-count text-[10px] font-mono opacity-80" id="countCompSci">0</span>
           </button>
-          <button onclick="selectGenre('Artificial Intelligence')" class="genre-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-emerald-200/70 hover:text-white hover:bg-white/5 transition flex items-center space-x-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
-            <span>Artificial Intelligence</span>
+          <button onclick="selectGenre('Artificial Intelligence')" data-genre="Artificial Intelligence" class="genre-nav-btn w-full text-left px-3 py-1.5 rounded-lg transition flex items-center justify-between text-xs">
+            <span class="flex items-center space-x-2">
+              <span class="genre-dot w-2 h-2 rounded-full bg-emerald-700/60"></span>
+              <span class="genre-label">Artificial Intelligence</span>
+            </span>
+            <span class="genre-count text-[10px] font-mono opacity-80" id="countAI">0</span>
           </button>
-          <button onclick="selectGenre('Database Systems')" class="genre-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-emerald-200/70 hover:text-white hover:bg-white/5 transition flex items-center space-x-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
-            <span>Database Systems</span>
+          <button onclick="selectGenre('Database Systems')" data-genre="Database Systems" class="genre-nav-btn w-full text-left px-3 py-1.5 rounded-lg transition flex items-center justify-between text-xs">
+            <span class="flex items-center space-x-2">
+              <span class="genre-dot w-2 h-2 rounded-full bg-emerald-700/60"></span>
+              <span class="genre-label">Database Systems</span>
+            </span>
+            <span class="genre-count text-[10px] font-mono opacity-80" id="countDb">0</span>
           </button>
         </div>
       </div>

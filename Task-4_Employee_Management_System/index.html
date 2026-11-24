@@ -52,23 +52,29 @@
       <div class="space-y-1 text-xs pt-2">
         <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 py-1">Divisions</p>
         <div class="space-y-0.5" id="deptNavList">
-          <button onclick="filterByDept('')" class="dept-nav-btn active w-full text-left px-3 py-1.5 rounded-lg font-medium text-slate-800 bg-slate-100 transition flex items-center justify-between">
+          <button onclick="filterByDept('')" data-dept="" class="dept-nav-btn active w-full text-left px-3 py-1.5 rounded-lg font-semibold text-slate-900 bg-sky-50 border-l-2 border-sky-600 transition flex items-center justify-between text-xs">
             <span>All Departments</span>
+            <span class="dept-badge text-[10px] font-mono text-slate-500 font-semibold" id="badgeDeptAll">6</span>
           </button>
-          <button onclick="filterByDept('Engineering')" class="dept-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-between">
+          <button onclick="filterByDept('Engineering')" data-dept="Engineering" class="dept-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-between text-xs">
             <span>Engineering</span>
+            <span class="dept-badge text-[10px] font-mono text-slate-400 font-semibold" id="badgeDeptEng">0</span>
           </button>
-          <button onclick="filterByDept('Product & Design')" class="dept-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-between">
+          <button onclick="filterByDept('Product & Design')" data-dept="Product & Design" class="dept-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-between text-xs">
             <span>Product & Design</span>
+            <span class="dept-badge text-[10px] font-mono text-slate-400 font-semibold" id="badgeDeptDesign">0</span>
           </button>
-          <button onclick="filterByDept('Human Resources')" class="dept-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-between">
+          <button onclick="filterByDept('Human Resources')" data-dept="Human Resources" class="dept-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-between text-xs">
             <span>Human Resources</span>
+            <span class="dept-badge text-[10px] font-mono text-slate-400 font-semibold" id="badgeDeptHR">0</span>
           </button>
-          <button onclick="filterByDept('Marketing & Sales')" class="dept-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-between">
+          <button onclick="filterByDept('Marketing & Sales')" data-dept="Marketing & Sales" class="dept-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-between text-xs">
             <span>Marketing & Sales</span>
+            <span class="dept-badge text-[10px] font-mono text-slate-400 font-semibold" id="badgeDeptMkt">0</span>
           </button>
-          <button onclick="filterByDept('Finance & Accounting')" class="dept-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-between">
+          <button onclick="filterByDept('Finance & Accounting')" data-dept="Finance & Accounting" class="dept-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-between text-xs">
             <span>Finance & Accounting</span>
+            <span class="dept-badge text-[10px] font-mono text-slate-400 font-semibold" id="badgeDeptFin">0</span>
           </button>
         </div>
       </div>

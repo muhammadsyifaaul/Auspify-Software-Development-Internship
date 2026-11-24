@@ -184,9 +184,14 @@ function switchView(view) {
 
 function filterByDept(dept) {
   selectedDepartment = dept;
+
   document.querySelectorAll('.dept-nav-btn').forEach(btn => {
-    btn.classList.remove('font-medium', 'text-slate-800', 'bg-slate-100');
-    btn.classList.add('text-slate-600');
+    const btnDept = btn.getAttribute('data-dept') ?? '';
+    if (btnDept === dept) {
+      btn.className = 'dept-nav-btn active w-full text-left px-3 py-1.5 rounded-lg font-semibold text-slate-900 bg-sky-50 border-l-2 border-sky-600 transition flex items-center justify-between text-xs';
+    } else {
+      btn.className = 'dept-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center justify-between text-xs';
+    }
   });
 
   if (dept) {
@@ -284,13 +289,28 @@ function deleteEmployee(id) {
 }
 
 function renderAll() {
-  sidebarCountBadge.textContent = employees.length;
+  updateDeptBadges();
   const totalPayroll = employees.reduce((acc, e) => acc + (Number(e.salary) || 0), 0);
   sidebarPayrollTotal.textContent = '$' + totalPayroll.toLocaleString('en-US');
 
   if (currentView === 'team') renderDirectory();
   else if (currentView === 'org') renderOrgChart();
   else if (currentView === 'payroll') renderDeptBudgets();
+}
+
+function updateDeptBadges() {
+  const badgeAll = document.getElementById('badgeDeptAll');
+  if (badgeAll) badgeAll.textContent = employees.length;
+  const badgeEng = document.getElementById('badgeDeptEng');
+  if (badgeEng) badgeEng.textContent = employees.filter(e => e.department === 'Engineering').length;
+  const badgeDesign = document.getElementById('badgeDeptDesign');
+  if (badgeDesign) badgeDesign.textContent = employees.filter(e => e.department === 'Product & Design').length;
+  const badgeHR = document.getElementById('badgeDeptHR');
+  if (badgeHR) badgeHR.textContent = employees.filter(e => e.department === 'Human Resources').length;
+  const badgeMkt = document.getElementById('badgeDeptMkt');
+  if (badgeMkt) badgeMkt.textContent = employees.filter(e => e.department === 'Marketing & Sales').length;
+  const badgeFin = document.getElementById('badgeDeptFin');
+  if (badgeFin) badgeFin.textContent = employees.filter(e => e.department === 'Finance & Accounting').length;
 }
 
 function renderDirectory() {
@@ -309,6 +329,9 @@ function renderDirectory() {
 
     return matchesQuery && matchesDept && matchesType;
   });
+
+  // Keep sidebar count badge synchronized with current filtered department count
+  sidebarCountBadge.textContent = filtered.length;
 
   employeeCardGrid.innerHTML = '';
   if (filtered.length === 0) {
@@ -384,40 +407,52 @@ function renderOrgChart() {
   const depts = ['Engineering', 'Product & Design', 'Human Resources', 'Marketing & Sales', 'Finance & Accounting'];
 
   orgTreeContainer.innerHTML = `
-    <!-- Executive Node -->
-    <div class="text-center mb-8">
-      <div class="inline-block p-4 rounded-2xl bg-gradient-to-r from-slate-900 to-sky-950 text-white shadow-md text-xs">
-        <span class="text-[10px] font-mono text-sky-300 block uppercase">Chief Executive</span>
-        <h3 class="font-bold text-sm mt-0.5">Auspify Executive Leadership</h3>
-        <p class="text-[11px] text-slate-300 mt-1">${employees.length} Total Team Members</p>
+    <!-- Top Level: Executive Leadership Node -->
+    <div class="flex flex-col items-center">
+      <div class="inline-block p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-sky-950 text-white shadow-md text-xs text-center border border-slate-700 min-w-[260px] z-10">
+        <span class="text-[10px] font-mono text-sky-300 block uppercase font-bold tracking-wider">Chief Executive Leadership</span>
+        <h3 class="font-bold text-sm mt-0.5">Auspify Executive Board</h3>
+        <p class="text-[11px] text-slate-300 mt-1">${employees.length} Total Registered Personnel</p>
       </div>
-      <div class="w-px h-8 bg-slate-300 mx-auto"></div>
+
+      <!-- Vertical Stem from Executive directly to horizontal busbar -->
+      <div class="w-0.5 h-8 bg-sky-400"></div>
     </div>
 
-    <!-- Department Branches Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      ${depts.map(d => {
-        const team = employees.filter(e => e.department === d);
-        return `
-          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-3">
-            <div class="flex items-center justify-between border-b border-slate-200 pb-2">
-              <span class="font-bold text-slate-800">${d}</span>
-              <span class="text-[10px] bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded-full">${team.length} members</span>
-            </div>
-            <div class="space-y-2">
-              ${team.length ? team.map(m => `
-                <div class="bg-white p-2.5 rounded-lg border border-slate-100 flex items-center justify-between">
-                  <div>
-                    <h5 class="font-bold text-slate-900">${escapeHtml(m.name)}</h5>
-                    <p class="text-[10px] text-slate-500">${escapeHtml(m.role)}</p>
-                  </div>
-                  <span class="text-[10px] font-mono text-slate-400">${m.type}</span>
+    <!-- Tree Distribution Network -->
+    <div class="relative w-full max-w-6xl mx-auto -mt-0.5">
+      <!-- Continuous Horizontal Connecting Busbar spanning all 5 divisions -->
+      <div class="hidden lg:block absolute top-0 left-[10%] right-[10%] h-0.5 bg-sky-300"></div>
+
+      <!-- 5 Connected Department Columns -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 pt-0">
+        ${depts.map(d => {
+          const team = employees.filter(e => e.department === d);
+          return `
+            <div class="flex flex-col items-center">
+              <!-- Unbroken Vertical Connecting Drop-line into department box -->
+              <div class="hidden lg:block w-0.5 h-6 bg-sky-300"></div>
+
+              <!-- Department Box Node -->
+              <div class="w-full bg-slate-50 p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs text-xs space-y-2.5">
+                <div class="flex items-center justify-between border-b border-slate-200/80 pb-2">
+                  <span class="font-bold text-slate-900 truncate">${d}</span>
+                  <span class="text-[10px] bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded-full shrink-0">${team.length}</span>
                 </div>
-              `).join('') : '<p class="text-slate-400 text-[11px]">No active staff assigned.</p>'}
+                <div class="space-y-2">
+                  ${team.length ? team.map(m => `
+                    <div class="bg-white p-2.5 rounded-xl border border-slate-200/70 shadow-2xs">
+                      <h5 class="font-bold text-slate-900 text-xs truncate">${escapeHtml(m.name)}</h5>
+                      <p class="text-[10px] text-sky-600 font-medium truncate">${escapeHtml(m.role)}</p>
+                      <span class="text-[9px] font-mono text-slate-400 mt-1 block">${m.type}</span>
+                    </div>
+                  `).join('') : '<p class="text-slate-400 text-[11px] py-1 text-center font-medium">No personnel</p>'}
+                </div>
+              </div>
             </div>
-          </div>
-        `;
-      }).join('')}
+          `;
+        }).join('')}
+      </div>
     </div>
   `;
 }
