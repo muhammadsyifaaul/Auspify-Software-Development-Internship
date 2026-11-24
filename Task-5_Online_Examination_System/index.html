@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Examination System | Auspify Internship</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-indigo-900 via-blue-800 to-indigo-950 text-white shadow-lg sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center shadow-inner">
+          <i class="fa-solid fa-file-pen text-amber-300 text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight">ExamVerse Pro</h1>
+          <p class="text-xs text-indigo-200">Online Examination & Assessment Engine • Task 5</p>
+        </div>
+      </div>
+
+      <!-- User Auth State Header Area -->
+      <div class="flex items-center space-x-3">
+        <div id="authUserBadge" class="hidden sm:flex items-center space-x-2 text-xs bg-white/10 px-3 py-1.5 rounded-xl border border-white/15">
+          <i class="fa-regular fa-circle-user text-blue-300"></i>
+          <span id="headerUserName" class="font-medium text-white">Guest User</span>
+        </div>
+        <button id="authBtn" class="inline-flex items-center space-x-2 text-xs font-semibold bg-white text-indigo-900 hover:bg-indigo-50 px-3.5 py-2 rounded-lg shadow-sm font-medium transition transform hover:-translate-y-0.5">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i>
+          <span id="authBtnText">Sign In</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Container (Dynamic views switched via JS) -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-6">
+
+    <!-- VIEW 1: EXAM CATALOG / LISTING & DASHBOARD -->
+    <section id="viewCatalog" class="space-y-6">
+      <!-- Welcome Banner -->
+      <div class="bg-gradient-to-r from-indigo-800 to-blue-700 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
+        <div class="relative z-10 max-w-2xl">
+          <span class="inline-block px-3 py-1 bg-white/15 backdrop-blur text-xs font-semibold uppercase tracking-wider rounded-full mb-3 text-indigo-100">
+            Auspify Certified Assessment Platform
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Expand Your Knowledge & Test Your Skills</h2>
+          <p class="text-sm text-indigo-100 mt-2 leading-relaxed">
+            Take timed technical assessments with automated grading, instant feedback, and certified scorecards.
+          </p>
+        </div>
+        <div class="absolute right-6 -bottom-6 opacity-15 hidden lg:block">
+          <i class="fa-solid fa-brain text-9xl"></i>
+        </div>
+      </div>
+
+      <!-- Quick Metrics -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Available Assessments</p>
+            <h3 id="statTotalExams" class="text-2xl font-bold text-slate-800 mt-1">3</h3>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-list-check"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Completed Tests</p>
+            <h3 id="statCompletedTests" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-square-check"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Average Test Score</p>
+            <h3 id="statAvgScore" class="text-2xl font-bold text-blue-600 mt-1">0%</h3>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-trophy"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
+        <div class="relative w-full md:w-96">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="searchExamInput" placeholder="Search exams by title or topic..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+        </div>
+        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <select id="examCategoryFilter" class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-600">
+            <option value="">All Categories</option>
+            <option value="Computer Science">Computer Science</option>
+            <option value="Web Development">Web Development</option>
+            <option value="Database Systems">Database Systems</option>
+          </select>
+
+          <select id="examDifficultyFilter" class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-600">
+            <option value="">All Difficulties</option>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Exams Grid / Cards Listing -->
+      <div id="examsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Dynamically injected via JS -->
+      </div>
+    </section>
+
+    <!-- VIEW 2: ACTIVE EXAMINATION INTERFACE -->
+    <section id="viewExamInterface" class="space-y-6 hidden">
+      <!-- Exam Live Header Bar -->
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <span id="activeExamCategoryBadge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700">
+            Computer Science
+          </span>
+          <h2 id="activeExamTitle" class="text-lg sm:text-xl font-bold text-slate-800 mt-2">Exam Title</h2>
+        </div>
+
+        <div class="flex items-center space-x-4">
+          <!-- Countdown Timer -->
+          <div class="flex items-center space-x-2 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-2 rounded-xl">
+            <i class="fa-solid fa-clock-stopwatch text-rose-600"></i>
+            <span class="text-xs font-medium uppercase tracking-wider">Remaining:</span>
+            <span id="timerDisplay" class="font-mono font-bold text-lg">10:00</span>
+          </div>
+
+          <!-- Submit Button -->
+          <button id="finishExamBtn" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition shadow-sm inline-flex items-center space-x-1.5">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Submit Exam</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Question Interface & Palette -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Main Question Container -->
+        <div class="lg:col-span-3 bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-sm space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <span id="questionNumberIndicator" class="text-xs font-bold uppercase tracking-wider text-indigo-600">
+              Question 1 of 5
+            </span>
+            <span class="text-xs text-slate-400">Single Choice</span>
+          </div>
+
+          <h3 id="currentQuestionText" class="text-base sm:text-lg font-semibold text-slate-800 leading-relaxed">
+            Question prompt will appear here...
+          </h3>
+
+          <!-- Options Container -->
+          <div id="optionsContainer" class="space-y-3">
+            <!-- Dynamically populated options -->
+          </div>
+
+          <!-- Question Controls -->
+          <div class="flex items-center justify-between pt-6 border-t border-slate-100">
+            <button id="prevQuestionBtn" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
+              <i class="fa-solid fa-arrow-left mr-1"></i> Previous
+            </button>
+            <button id="nextQuestionBtn" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold text-white transition">
+              Next <i class="fa-solid fa-arrow-right ml-1"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Question Navigation Palette Sidebar -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">Question Palette</h4>
+          <p class="text-xs text-slate-400">Jump directly to any question</p>
+
+          <div id="questionPaletteGrid" class="grid grid-cols-5 gap-2">
+            <!-- Injected dynamically -->
+          </div>
+
+          <div class="pt-4 border-t border-slate-100 space-y-2 text-xs">
+            <div class="flex items-center space-x-2">
+              <span class="w-3.5 h-3.5 rounded bg-indigo-600 inline-block"></span>
+              <span class="text-slate-600">Answered</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="w-3.5 h-3.5 rounded bg-slate-200 inline-block"></span>
+              <span class="text-slate-600">Unanswered</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: RESULT & SCORECARD VIEW -->
+    <section id="viewResult" class="max-w-2xl mx-auto space-y-6 hidden">
+      <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden p-8 text-center space-y-6">
+        <div id="resultIconContainer" class="w-20 h-20 rounded-full mx-auto flex items-center justify-center text-3xl shadow-inner bg-emerald-100 text-emerald-600">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+
+        <div>
+          <span id="resultBadge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">
+            Passed
+          </span>
+          <h2 id="resultExamTitle" class="text-2xl font-extrabold text-slate-800 mt-3">Assessment Completed!</h2>
+          <p id="resultFeedback" class="text-sm text-slate-500 mt-1">Great job! You have satisfied the passing criteria.</p>
+        </div>
+
+        <!-- Score Breakdown Cards -->
+        <div class="grid grid-cols-3 gap-4 bg-slate-50 p-5 rounded-2xl border border-slate-100">
+          <div>
+            <p class="text-xs text-slate-400">Your Score</p>
+            <h4 id="resultScorePercent" class="text-2xl font-black text-indigo-600 mt-1">80%</h4>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400">Correct Answers</p>
+            <h4 id="resultCorrectCount" class="text-2xl font-bold text-emerald-600 mt-1">4 / 5</h4>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400">Time Taken</p>
+            <h4 id="resultTimeTaken" class="text-2xl font-bold text-slate-700 mt-1">04:12</h4>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+          <button id="backToCatalogBtn" class="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Back to Catalog
+          </button>
+          <button id="printCertBtn" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold text-white transition shadow-sm">
+            <i class="fa-solid fa-certificate mr-1"></i> Print / Save Certificate
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Auth Modal (Sign In / Register) -->
+  <div id="authModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all animate-in fade-in zoom-in duration-200">
+      <div class="bg-gradient-to-r from-indigo-900 to-blue-800 p-5 text-white flex justify-between items-center">
+        <div>
+          <h3 class="text-base font-bold">Student Authentication</h3>
+          <p class="text-xs text-indigo-200">Sign in to record and verify your exam scores</p>
+        </div>
+        <button id="closeAuthModalBtn" class="text-white/80 hover:text-white text-xl">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="authForm" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Full Name <span class="text-red-500">*</span></label>
+          <input type="text" id="authNameInput" required placeholder="e.g. Alex Morgan" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Student / Candidate ID <span class="text-red-500">*</span></label>
+          <input type="text" id="authIdInput" required placeholder="AUSP-2026-90" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Email</label>
+          <input type="email" id="authEmailInput" placeholder="alex@auspify.com" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition">
+          Confirm & Continue
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    <p>Auspify Technologies Software Development Internship • <strong>Task 5: Online Examination System</strong></p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

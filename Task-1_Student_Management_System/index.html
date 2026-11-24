@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Management System | Auspify Internship</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+
+  <!-- Header / Navigation -->
+  <header class="bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 text-white shadow-lg sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center shadow-inner">
+          <i class="fa-solid fa-graduation-cap text-yellow-300 text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight">EduTrack Pro</h1>
+          <p class="text-xs text-blue-100">Student Management System • Task 1</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button id="exportCsvBtn" class="inline-flex items-center space-x-2 text-xs font-semibold bg-white/15 hover:bg-white/25 text-white px-3.5 py-2 rounded-lg border border-white/20 transition">
+          <i class="fa-solid fa-file-csv"></i>
+          <span>Export CSV</span>
+        </button>
+        <button id="openAddModalBtn" class="inline-flex items-center space-x-2 text-xs font-semibold bg-white text-blue-700 hover:bg-blue-50 px-4 py-2 rounded-lg shadow-sm font-medium transition transform hover:-translate-y-0.5">
+          <i class="fa-solid fa-user-plus"></i>
+          <span>Add Student</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-6">
+
+    <!-- Overview Statistics Cards -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between hover:shadow-md transition">
+        <div>
+          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Students</p>
+          <h3 id="statTotalStudents" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+          <span class="text-xs text-emerald-600 font-medium inline-flex items-center mt-1">
+            <i class="fa-solid fa-arrow-trend-up mr-1"></i> Active Database
+          </span>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-users"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between hover:shadow-md transition">
+        <div>
+          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Active Enrollment</p>
+          <h3 id="statActiveStudents" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+          <span class="text-xs text-blue-600 font-medium inline-flex items-center mt-1">
+            <i class="fa-solid fa-check-circle mr-1"></i> Enrolled Status
+          </span>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-user-check"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between hover:shadow-md transition">
+        <div>
+          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Average GPA</p>
+          <h3 id="statAvgGpa" class="text-2xl font-bold text-slate-800 mt-1">0.00</h3>
+          <span class="text-xs text-amber-600 font-medium inline-flex items-center mt-1">
+            <i class="fa-solid fa-star mr-1"></i> Academic Index
+          </span>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-award"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between hover:shadow-md transition">
+        <div>
+          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Departments</p>
+          <h3 id="statTotalDepartments" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+          <span class="text-xs text-purple-600 font-medium inline-flex items-center mt-1">
+            <i class="fa-solid fa-layer-group mr-1"></i> Study Programs
+          </span>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-book-bookmark"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
+      <div class="relative w-full md:w-96">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input type="text" id="searchInput" placeholder="Search by name, student ID, or email..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+      </div>
+      <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <select id="courseFilter" class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-600">
+          <option value="">All Departments</option>
+          <option value="Computer Science">Computer Science</option>
+          <option value="Information Systems">Information Systems</option>
+          <option value="Software Engineering">Software Engineering</option>
+          <option value="Data Science">Data Science</option>
+          <option value="Cyber Security">Cyber Security</option>
+        </select>
+
+        <select id="statusFilter" class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-600">
+          <option value="">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Probation">Probation</option>
+          <option value="Graduated">Graduated</option>
+          <option value="Suspended">Suspended</option>
+        </select>
+
+        <button id="resetFilterBtn" class="px-3 py-2.5 text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition">
+          <i class="fa-solid fa-rotate-left mr-1"></i> Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- Student Table Card -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-600">
+          <thead class="bg-slate-50/80 text-xs uppercase tracking-wider text-slate-500 font-semibold border-b border-slate-200">
+            <tr>
+              <th scope="col" class="py-4 px-6">Student Info</th>
+              <th scope="col" class="py-4 px-6">Department</th>
+              <th scope="col" class="py-4 px-6">Contact</th>
+              <th scope="col" class="py-4 px-6 text-center">GPA</th>
+              <th scope="col" class="py-4 px-6 text-center">Status</th>
+              <th scope="col" class="py-4 px-6 text-center">Enrolled Date</th>
+              <th scope="col" class="py-4 px-6 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentTableBody" class="divide-y divide-slate-100">
+            <!-- Dynamic rows generated by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="hidden text-center py-12 px-4">
+        <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-3">
+          <i class="fa-regular fa-folder-open text-2xl"></i>
+        </div>
+        <h4 class="text-base font-semibold text-slate-700">No students found</h4>
+        <p class="text-sm text-slate-400 mt-1 max-w-sm mx-auto">Try adjusting your search criteria or add a new student record to get started.</p>
+      </div>
+
+      <!-- Table Footer / Count -->
+      <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <span id="recordCountLabel">Showing 0 of 0 students</span>
+        <span class="text-slate-400">EduTrack System v1.0</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Add/Edit Student Modal -->
+  <div id="studentModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all animate-in fade-in zoom-in duration-200">
+      <div class="bg-gradient-to-r from-blue-700 to-indigo-700 p-5 text-white flex justify-between items-center">
+        <div>
+          <h3 id="modalTitle" class="text-lg font-bold">Add New Student</h3>
+          <p class="text-xs text-blue-100">Fill in the details to register or update student data</p>
+        </div>
+        <button id="closeModalBtn" class="text-white/80 hover:text-white text-xl focus:outline-none">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="studentForm" class="p-6 space-y-4">
+        <input type="hidden" id="studentIdHidden">
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Student ID / NIM <span class="text-red-500">*</span></label>
+          <input type="text" id="studentCode" required placeholder="e.g. STU-2026-001" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Full Name <span class="text-red-500">*</span></label>
+          <input type="text" id="studentName" required placeholder="e.g. Alex Johnson" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Email Address <span class="text-red-500">*</span></label>
+            <input type="email" id="studentEmail" required placeholder="alex@univ.edu" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Phone Number</label>
+            <input type="tel" id="studentPhone" placeholder="+62 812 3456 7890" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Department / Major <span class="text-red-500">*</span></label>
+            <select id="studentCourse" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+              <option value="">Select Department</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Information Systems">Information Systems</option>
+              <option value="Software Engineering">Software Engineering</option>
+              <option value="Data Science">Data Science</option>
+              <option value="Cyber Security">Cyber Security</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">GPA (0.00 - 4.00) <span class="text-red-500">*</span></label>
+            <input type="number" id="studentGpa" step="0.01" min="0" max="4" required placeholder="3.75" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Enrollment Date</label>
+            <input type="date" id="studentEnrollDate" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Academic Status</label>
+            <select id="studentStatus" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+              <option value="Active">Active</option>
+              <option value="Probation">Probation</option>
+              <option value="Graduated">Graduated</option>
+              <option value="Suspended">Suspended</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
+          <button type="button" id="cancelModalBtn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition">
+            Save Student
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Detail View Modal -->
+  <div id="viewModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all">
+      <div class="bg-slate-800 p-5 text-white flex justify-between items-center">
+        <h3 class="text-base font-bold flex items-center space-x-2">
+          <i class="fa-solid fa-id-card text-blue-400"></i>
+          <span>Student Profile Card</span>
+        </h3>
+        <button id="closeViewModalBtn" class="text-white/70 hover:text-white text-xl">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-6 text-center" id="viewModalContent">
+        <!-- Injected via JS -->
+      </div>
+      <div class="p-4 bg-slate-50 border-t border-slate-100 text-right">
+        <button id="closeViewModalBtn2" class="px-4 py-1.5 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 text-slate-700 transition">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    <p>Auspify Technologies Software Development Internship • <strong>Task 1: Student Management System</strong></p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

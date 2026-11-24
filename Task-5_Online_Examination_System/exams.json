@@ -1,0 +1,126 @@
+[
+  {
+    "id": "EXAM-CS-101",
+    "title": "Data Structures & Algorithms Certification",
+    "category": "Computer Science",
+    "difficulty": "Intermediate",
+    "durationMinutes": 10,
+    "passingScore": 70,
+    "description": "Assess your understanding of time complexity, arrays, trees, graphs, and dynamic programming.",
+    "questions": [
+      {
+        "id": 1,
+        "question": "What is the average time complexity of searching in a Balanced Binary Search Tree (AVL Tree)?",
+        "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+        "correctIndex": 1,
+        "explanation": "Searching in a balanced BST splits the search space in half at each step, yielding O(log n)."
+      },
+      {
+        "id": 2,
+        "question": "Which data structure follows the Last-In, First-Out (LIFO) principle?",
+        "options": ["Queue", "Stack", "Binary Heap", "Linked List"],
+        "correctIndex": 1,
+        "explanation": "A Stack works on the LIFO principle where elements are pushed and popped from top."
+      },
+      {
+        "id": 3,
+        "question": "What is the worst-case time complexity of QuickSort?",
+        "options": ["O(n)", "O(n log n)", "O(n^2)", "O(2^n)"],
+        "correctIndex": 2,
+        "explanation": "When an unbalanced pivot is picked repeatedly, QuickSort degrades to O(n^2)."
+      },
+      {
+        "id": 4,
+        "question": "Which algorithm is commonly used to find the shortest path in a graph with non-negative edge weights?",
+        "options": ["Dijkstra's Algorithm", "Kruskal's Algorithm", "Depth First Search", "Floyd-Warshall"],
+        "correctIndex": 0,
+        "explanation": "Dijkstra's algorithm is optimal for single-source shortest paths on non-negative graphs."
+      },
+      {
+        "id": 5,
+        "question": "Which of the following is NOT an in-place sorting algorithm?",
+        "options": ["Bubble Sort", "Insertion Sort", "Heap Sort", "Merge Sort"],
+        "correctIndex": 3,
+        "explanation": "Standard Merge Sort requires O(n) auxiliary space to merge subarrays."
+      }
+    ]
+  },
+  {
+    "id": "EXAM-WEB-201",
+    "title": "Modern JavaScript & Web Development Assessment",
+    "category": "Web Development",
+    "difficulty": "Beginner",
+    "durationMinutes": 8,
+    "passingScore": 60,
+    "description": "Evaluate modern ES6+ syntax, asynchronous programming, DOM manipulation, and promises.",
+    "questions": [
+      {
+        "id": 1,
+        "question": "Which keyword is used to declare a block-scoped variable that cannot be reassigned?",
+        "options": ["var", "let", "const", "def"],
+        "correctIndex": 2,
+        "explanation": "'const' creates immutable bindings within block scope."
+      },
+      {
+        "id": 2,
+        "question": "What does Promise.all() return if any of the passed promises reject?",
+        "options": ["An array with null values", "A promise that immediately rejects with that reason", "The first resolved promise", "It waits for all promises to resolve"],
+        "correctIndex": 1,
+        "explanation": "Promise.all() rejects immediately as soon as any promise in the iterable rejects."
+      },
+      {
+        "id": 3,
+        "question": "What will `typeof NaN` evaluate to in JavaScript?",
+        "options": ["'undefined'", "'nan'", "'number'", "'object'"],
+        "correctIndex": 2,
+        "explanation": "According to the IEEE 754 floating-point standard, NaN is technically a numerical value."
+      },
+      {
+        "id": 4,
+        "question": "Which method turns a JavaScript object into a JSON formatted string?",
+        "options": ["JSON.parse()", "JSON.stringify()", "JSON.toString()", "Object.toJSON()"],
+        "correctIndex": 1,
+        "explanation": "JSON.stringify() converts a JavaScript value to a JSON string."
+      }
+    ]
+  },
+  {
+    "id": "EXAM-DB-301",
+    "title": "SQL & Relational Database Architecture",
+    "category": "Database Systems",
+    "difficulty": "Advanced",
+    "durationMinutes": 12,
+    "passingScore": 75,
+    "description": "Deep dive into ACID properties, query optimization, indexing strategies, and normalization.",
+    "questions": [
+      {
+        "id": 1,
+        "question": "Which normal form removes partial functional dependencies on a composite primary key?",
+        "options": ["First Normal Form (1NF)", "Second Normal Form (2NF)", "Third Normal Form (3NF)", "Boyce-Codd Normal Form (BCNF)"],
+        "correctIndex": 1,
+        "explanation": "2NF requires 1NF and no non-prime attribute to be dependent on any proper subset of any candidate key."
+      },
+      {
+        "id": 2,
+        "question": "What does the 'I' in ACID transaction properties stand for?",
+        "options": ["Integrity", "Isolation", "Indexing", "Immutable"],
+        "correctIndex": 1,
+        "explanation": "Isolation ensures concurrent transactions execute without interfering with one another."
+      },
+      {
+        "id": 3,
+        "question": "Which SQL clause is used to filter records after aggregation with GROUP BY?",
+        "options": ["WHERE", "HAVING", "FILTER", "ORDER BY"],
+        "correctIndex": 1,
+        "explanation": "HAVING filters groups created by the GROUP BY clause."
+      },
+      {
+        "id": 4,
+        "question": "Which index structure is most commonly utilized by relational database storage engines for range queries?",
+        "options": ["Hash Index", "B+ Tree", "Skip List", "Trie"],
+        "correctIndex": 1,
+        "explanation": "B+ Trees store sequential pointers across leaf nodes, making range queries exceptionally fast."
+      }
+    ]
+  }
+]
