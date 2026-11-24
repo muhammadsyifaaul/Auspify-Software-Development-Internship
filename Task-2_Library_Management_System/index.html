@@ -3,352 +3,286 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Library Management System | Auspify Internship</title>
+  <title>LibroSync Library | Digital Bookshelf & Circulation Desk</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+<body class="bg-[#faf8f5] text-[#2c2825] min-h-screen flex font-sans antialiased">
 
-  <!-- Header -->
-  <header class="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 text-white shadow-lg sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+  <!-- LEFT FIXED SIDEBAR: LIBRARY SECTIONS & GENRES -->
+  <aside class="w-64 bg-[#1b2621] text-emerald-100/90 flex flex-col justify-between shrink-0 hidden md:flex border-r border-[#141e1a]">
+    <div class="p-5 space-y-6">
+      <!-- Library Brand -->
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center shadow-inner">
-          <i class="fa-solid fa-book-open text-amber-300 text-xl"></i>
+        <div class="w-10 h-10 rounded-xl bg-amber-400 text-[#1b2621] flex items-center justify-center font-black text-lg shadow-md">
+          <i class="fa-solid fa-book-bookmark"></i>
         </div>
         <div>
-          <h1 class="text-xl font-bold tracking-tight">LibroSync Hub</h1>
-          <p class="text-xs text-emerald-100">Library & Transactions Management System • Task 2</p>
+          <h2 class="text-base font-bold text-white tracking-tight">LibroSync</h2>
+          <p class="text-[10px] text-emerald-300/70 font-mono tracking-widest uppercase">Digital Library</p>
         </div>
       </div>
-      <div class="flex items-center space-x-3">
-        <button id="exportReportBtn" class="inline-flex items-center space-x-2 text-xs font-semibold bg-white/15 hover:bg-white/25 text-white px-3.5 py-2 rounded-lg border border-white/20 transition">
-          <i class="fa-solid fa-file-export"></i>
-          <span>Export Report</span>
+
+      <!-- Navigation Menu -->
+      <nav class="space-y-1 text-xs">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-400/60 px-3 py-1">Main Stacks</p>
+        <button id="navAllBooks" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/10 text-white font-medium transition">
+          <span class="flex items-center space-x-2.5">
+            <i class="fa-solid fa-books w-4"></i>
+            <span>All Bookshelf</span>
+          </span>
+          <span id="navTotalBooksBadge" class="text-[10px] bg-emerald-500/30 px-2 py-0.5 rounded-full font-mono">5</span>
         </button>
-        <button id="openAddBookModalBtn" class="inline-flex items-center space-x-2 text-xs font-semibold bg-white text-emerald-800 hover:bg-emerald-50 px-4 py-2 rounded-lg shadow-sm font-medium transition transform hover:-translate-y-0.5">
-          <i class="fa-solid fa-plus"></i>
-          <span>Add New Book</span>
+
+        <button id="navCirculation" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 text-emerald-200/80 hover:text-white font-medium transition">
+          <span class="flex items-center space-x-2.5">
+            <i class="fa-solid fa-hand-holding-hand w-4"></i>
+            <span>Circulation Loans</span>
+          </span>
+          <span id="navLoansBadge" class="text-[10px] bg-amber-400 text-slate-900 px-2 py-0.5 rounded-full font-bold">2</span>
         </button>
+      </nav>
+
+      <!-- Category Filter Stacks -->
+      <div class="space-y-1 text-xs pt-2">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-400/60 px-3 py-1">Genre Shelves</p>
+        <div id="genreNavList" class="space-y-0.5">
+          <button onclick="selectGenre('')" class="genre-nav-btn active w-full text-left px-3 py-1.5 rounded-lg text-emerald-200 hover:text-white hover:bg-white/5 transition flex items-center space-x-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+            <span>All Genres</span>
+          </button>
+          <button onclick="selectGenre('Software Engineering')" class="genre-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-emerald-200/70 hover:text-white hover:bg-white/5 transition flex items-center space-x-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+            <span>Software Engineering</span>
+          </button>
+          <button onclick="selectGenre('Computer Science')" class="genre-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-emerald-200/70 hover:text-white hover:bg-white/5 transition flex items-center space-x-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+            <span>Computer Science</span>
+          </button>
+          <button onclick="selectGenre('Artificial Intelligence')" class="genre-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-emerald-200/70 hover:text-white hover:bg-white/5 transition flex items-center space-x-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+            <span>Artificial Intelligence</span>
+          </button>
+          <button onclick="selectGenre('Database Systems')" class="genre-nav-btn w-full text-left px-3 py-1.5 rounded-lg text-emerald-200/70 hover:text-white hover:bg-white/5 transition flex items-center space-x-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+            <span>Database Systems</span>
+          </button>
+        </div>
       </div>
     </div>
-  </header>
 
-  <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-6">
-
-    <!-- KPI Statistics Cards -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between hover:shadow-md transition">
-        <div>
-          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Titles</p>
-          <h3 id="statTotalBooks" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
-          <span class="text-xs text-emerald-600 font-medium inline-flex items-center mt-1">
-            <i class="fa-solid fa-layer-group mr-1"></i> Catalog Titles
-          </span>
-        </div>
-        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
-          <i class="fa-solid fa-book"></i>
-        </div>
-      </div>
-
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between hover:shadow-md transition">
-        <div>
-          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Copies</p>
-          <h3 id="statTotalCopies" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
-          <span class="text-xs text-blue-600 font-medium inline-flex items-center mt-1">
-            <i class="fa-solid fa-copy mr-1"></i> Inventory Volume
-          </span>
-        </div>
-        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
-          <i class="fa-solid fa-books"></i>
-        </div>
-      </div>
-
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between hover:shadow-md transition">
-        <div>
-          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Currently Issued</p>
-          <h3 id="statIssuedBooks" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
-          <span class="text-xs text-amber-600 font-medium inline-flex items-center mt-1">
-            <i class="fa-solid fa-hand-holding-hand mr-1"></i> Active Borrows
-          </span>
-        </div>
-        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
-          <i class="fa-solid fa-arrow-right-arrow-left"></i>
-        </div>
-      </div>
-
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between hover:shadow-md transition">
-        <div>
-          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Overdue Books</p>
-          <h3 id="statOverdueBooks" class="text-2xl font-bold text-rose-600 mt-1">0</h3>
-          <span class="text-xs text-rose-500 font-medium inline-flex items-center mt-1">
-            <i class="fa-solid fa-clock-rotate-left mr-1"></i> Late Returns
-          </span>
-        </div>
-        <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
-          <i class="fa-solid fa-triangle-exclamation"></i>
-        </div>
-      </div>
-    </section>
-
-    <!-- Tabs Navigation: Books Catalog vs Borrow Transactions -->
-    <div class="flex border-b border-slate-200 space-x-6 text-sm font-semibold">
-      <button id="tabBooksBtn" class="py-3 px-1 border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-2 transition">
-        <i class="fa-solid fa-book"></i>
-        <span>Book Catalog</span>
-      </button>
-      <button id="tabTransactionsBtn" class="py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition">
-        <i class="fa-solid fa-clock-rotate-left"></i>
-        <span>Issue & Return Transactions</span>
-        <span id="transBadgeCount" class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full">0</span>
-      </button>
+    <!-- Sidebar Footer -->
+    <div class="p-4 bg-[#141e1a] text-xs text-emerald-300/60 flex items-center justify-between border-t border-white/5">
+      <span>Circulation Desk</span>
+      <span class="text-amber-400 font-mono text-[10px]">Open 24/7</span>
     </div>
+  </aside>
 
-    <!-- BOOK CATALOG VIEW -->
-    <div id="booksCatalogSection" class="space-y-6">
-      <!-- Search & Filters -->
-      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
-        <div class="relative w-full md:w-96">
-          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-          <input type="text" id="searchBookInput" placeholder="Search by title, author, or ISBN..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+  <!-- MAIN AREA -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <!-- Top Modern Search & Action Bar -->
+    <header class="bg-white/80 backdrop-blur border-b border-[#e9e3da] px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4 sticky top-0 z-20">
+      <div class="relative flex-1 max-w-md">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+        <input type="text" id="searchBookInput" placeholder="Search books by title, author, or ISBN..." class="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-[#f5f1ea] border border-[#e5dfd4] focus:outline-none focus:ring-2 focus:ring-[#1b2621] focus:bg-white transition">
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <button id="openCirculationDrawerBtn" class="inline-flex items-center space-x-1.5 text-xs font-semibold px-3 py-2 rounded-xl bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300/60 transition">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>Loans Desk</span>
+          <span id="loanBadgeCounter" class="bg-amber-400 text-[#1b2621] px-1.5 py-0.2 rounded-full font-mono text-[10px]">2</span>
+        </button>
+
+        <button id="openAddBookModalBtn" class="inline-flex items-center space-x-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl bg-[#1b2621] text-white hover:bg-[#283831] shadow-xs transition">
+          <i class="fa-solid fa-plus text-amber-300 text-xs"></i>
+          <span class="hidden sm:inline">Add Title</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT BODY: BOOKSHELF VIEW -->
+    <main class="p-4 sm:p-8 flex-1 space-y-6">
+
+      <!-- Bookshelf Header Info -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#e9e3da] pb-4">
+        <div>
+          <h2 id="currentShelfTitle" class="text-xl font-black text-[#1b2621] tracking-tight">Library Catalog</h2>
+          <p id="shelfSubtitle" class="text-xs text-slate-500">Browsing all cataloged volumes and textbooks</p>
         </div>
-        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <select id="genreFilter" class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-600">
-            <option value="">All Categories</option>
-            <option value="Computer Science">Computer Science</option>
-            <option value="Software Engineering">Software Engineering</option>
-            <option value="Artificial Intelligence">Artificial Intelligence</option>
-            <option value="Mathematics">Mathematics</option>
-            <option value="Database Systems">Database Systems</option>
-            <option value="Web Development">Web Development</option>
-          </select>
-
-          <select id="availabilityFilter" class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-600">
-            <option value="">All Availability</option>
-            <option value="Available">Available Now</option>
-            <option value="Unavailable">Fully Borrowed</option>
-          </select>
-
-          <button id="resetBookFilterBtn" class="px-3 py-2.5 text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition">
-            <i class="fa-solid fa-rotate-left mr-1"></i> Reset
+        <div class="flex items-center space-x-3 text-xs">
+          <span id="bookCountBadge" class="font-bold text-[#1b2621] bg-white px-3 py-1 rounded-full border border-[#e5dfd4] shadow-2xs">
+            5 Titles Available
+          </span>
+          <button id="exportCatalogBtn" class="text-slate-500 hover:text-slate-800 transition" title="Export CSV">
+            <i class="fa-solid fa-file-csv text-base"></i>
           </button>
         </div>
       </div>
 
-      <!-- Books Table -->
-      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-slate-600">
-            <thead class="bg-slate-50/80 text-xs uppercase tracking-wider text-slate-500 font-semibold border-b border-slate-200">
-              <tr>
-                <th scope="col" class="py-4 px-6">Book Details</th>
-                <th scope="col" class="py-4 px-6">Category</th>
-                <th scope="col" class="py-4 px-6">Shelf Location</th>
-                <th scope="col" class="py-4 px-6 text-center">Copies (Avail / Total)</th>
-                <th scope="col" class="py-4 px-6 text-center">Status</th>
-                <th scope="col" class="py-4 px-6 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="booksTableBody" class="divide-y divide-slate-100">
-              <!-- Dynamically populated -->
-            </tbody>
-          </table>
-        </div>
-
-        <div id="booksEmptyState" class="hidden text-center py-12 px-4">
-          <i class="fa-solid fa-book-bookmark text-4xl text-slate-300 mb-3"></i>
-          <h4 class="text-base font-semibold text-slate-700">No books found</h4>
-          <p class="text-sm text-slate-400 mt-1">Try modifying your search or add a new book to the library.</p>
-        </div>
-
-        <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span id="bookCountLabel">Showing 0 of 0 books</span>
-          <span class="text-slate-400">LibroSync Core v1.0</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- TRANSACTIONS VIEW -->
-    <div id="transactionsSection" class="space-y-6 hidden">
-      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
-        <div class="relative w-full md:w-96">
-          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-          <input type="text" id="searchTransInput" placeholder="Search by borrower name or book title..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
-        </div>
-        <div class="flex items-center gap-3">
-          <select id="transStatusFilter" class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-600">
-            <option value="">All Transactions</option>
-            <option value="Active">Currently Borrowed</option>
-            <option value="Returned">Returned</option>
-            <option value="Overdue">Overdue</option>
-          </select>
-        </div>
+      <!-- VISUAL BOOKSHELF GRID -->
+      <div id="bookshelfGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Injected dynamically via JS -->
       </div>
 
-      <!-- Transactions Table -->
-      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-slate-600">
-            <thead class="bg-slate-50/80 text-xs uppercase tracking-wider text-slate-500 font-semibold border-b border-slate-200">
-              <tr>
-                <th scope="col" class="py-4 px-6">Transaction ID</th>
-                <th scope="col" class="py-4 px-6">Book Title</th>
-                <th scope="col" class="py-4 px-6">Borrower / Member</th>
-                <th scope="col" class="py-4 px-6">Issue Date</th>
-                <th scope="col" class="py-4 px-6">Due Date</th>
-                <th scope="col" class="py-4 px-6 text-center">Status</th>
-                <th scope="col" class="py-4 px-6 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="transTableBody" class="divide-y divide-slate-100">
-              <!-- Dynamically populated -->
-            </tbody>
-          </table>
+      <!-- Empty State -->
+      <div id="booksEmptyState" class="hidden text-center py-20">
+        <div class="w-16 h-16 bg-[#e5dfd4] text-slate-500 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+          <i class="fa-solid fa-book-open"></i>
         </div>
-
-        <div id="transEmptyState" class="hidden text-center py-12 px-4">
-          <i class="fa-solid fa-receipt text-4xl text-slate-300 mb-3"></i>
-          <h4 class="text-base font-semibold text-slate-700">No transaction records</h4>
-          <p class="text-sm text-slate-400 mt-1">Issue a book from the Catalog tab to see borrow history here.</p>
-        </div>
+        <h3 class="text-sm font-bold text-slate-700">No Volumes Found</h3>
+        <p class="text-xs text-slate-400 mt-1 max-w-xs mx-auto">No books match your search or genre filter. Try switching shelves or adding a book.</p>
       </div>
-    </div>
+    </main>
+  </div>
 
-  </main>
-
-  <!-- Add/Edit Book Modal -->
-  <div id="bookModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all animate-in fade-in zoom-in duration-200">
-      <div class="bg-gradient-to-r from-emerald-800 to-teal-700 p-5 text-white flex justify-between items-center">
+  <!-- BOTTOM / SLIDE-IN CIRCULATION DESK DRAWER -->
+  <div id="circulationDrawer" class="fixed inset-0 z-50 overflow-hidden hidden">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" id="circBackdrop"></div>
+    <div class="fixed inset-y-0 right-0 max-w-xl w-full bg-white shadow-2xl flex flex-col z-10">
+      <div class="bg-[#1b2621] p-5 text-white flex justify-between items-center">
         <div>
-          <h3 id="bookModalTitle" class="text-lg font-bold">Add New Book</h3>
-          <p class="text-xs text-emerald-100">Enter catalog specifications for the book</p>
+          <h3 class="text-base font-bold flex items-center space-x-2">
+            <i class="fa-solid fa-arrows-rotate text-amber-400"></i>
+            <span>Library Circulation Desk</span>
+          </h3>
+          <p class="text-xs text-emerald-200/70">Issue checkout loans and process returns with overdue penalty auditing</p>
         </div>
-        <button id="closeBookModalBtn" class="text-white/80 hover:text-white text-xl">
+        <button id="closeCircDrawerBtn" class="text-white/70 hover:text-white text-xl">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <form id="bookForm" class="p-6 space-y-4">
+      <!-- Circulation List -->
+      <div class="p-5 flex-1 overflow-y-auto space-y-4" id="circLoansContainer">
+        <!-- Dynamically injected -->
+      </div>
+
+      <div class="p-4 bg-[#faf8f5] border-t border-[#e9e3da] text-xs text-slate-500 flex justify-between items-center">
+        <span>Standard Borrow Period: <strong>14 Days</strong></span>
+        <span>Late Fine: <strong>Rp 2.000 / day</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Book Modal -->
+  <div id="bookModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+      <div class="bg-[#1b2621] p-5 text-white flex justify-between items-center">
+        <div>
+          <h3 id="bookModalTitle" class="text-base font-bold">Catalog New Book</h3>
+          <p class="text-[11px] text-emerald-200/70">Add volume to library collection</p>
+        </div>
+        <button id="closeBookModalBtn" class="text-white/70 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="bookForm" class="p-6 space-y-3.5 text-xs">
         <input type="hidden" id="bookIdHidden">
 
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Book Title <span class="text-red-500">*</span></label>
-          <input type="text" id="bookTitle" required placeholder="e.g. Clean Architecture" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          <label class="block font-semibold text-slate-700 mb-1">Book Title <span class="text-red-500">*</span></label>
+          <input type="text" id="bookTitle" required placeholder="Clean Code" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#1b2621]">
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Author <span class="text-red-500">*</span></label>
-            <input type="text" id="bookAuthor" required placeholder="Robert C. Martin" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <label class="block font-semibold text-slate-700 mb-1">Author <span class="text-red-500">*</span></label>
+            <input type="text" id="bookAuthor" required placeholder="Robert C. Martin" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#1b2621]">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">ISBN Code <span class="text-red-500">*</span></label>
-            <input type="text" id="bookIsbn" required placeholder="978-0134494166" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <label class="block font-semibold text-slate-700 mb-1">ISBN Code <span class="text-red-500">*</span></label>
+            <input type="text" id="bookIsbn" required placeholder="978-0132350884" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#1b2621] font-mono">
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Category / Genre <span class="text-red-500">*</span></label>
-            <select id="bookCategory" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
-              <option value="Computer Science">Computer Science</option>
+            <label class="block font-semibold text-slate-700 mb-1">Category <span class="text-red-500">*</span></label>
+            <select id="bookCategory" required class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#1b2621]">
               <option value="Software Engineering">Software Engineering</option>
+              <option value="Computer Science">Computer Science</option>
               <option value="Artificial Intelligence">Artificial Intelligence</option>
-              <option value="Mathematics">Mathematics</option>
               <option value="Database Systems">Database Systems</option>
               <option value="Web Development">Web Development</option>
             </select>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Shelf / Section</label>
-            <input type="text" id="bookShelf" placeholder="Rack B-03" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <label class="block font-semibold text-slate-700 mb-1">Shelf Rack</label>
+            <input type="text" id="bookShelf" placeholder="Rack A-01" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#1b2621]">
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Total Copies <span class="text-red-500">*</span></label>
-            <input type="number" id="bookTotalCopies" min="1" max="1000" required value="5" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <label class="block font-semibold text-slate-700 mb-1">Total Copies <span class="text-red-500">*</span></label>
+            <input type="number" id="bookTotalCopies" min="1" required value="4" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#1b2621]">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Published Year</label>
-            <input type="number" id="bookYear" min="1900" max="2099" value="2023" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <label class="block font-semibold text-slate-700 mb-1">Published Year</label>
+            <input type="number" id="bookYear" min="1900" max="2099" value="2023" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#1b2621]">
           </div>
         </div>
 
-        <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
-          <button type="button" id="cancelBookModalBtn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
-            Cancel
-          </button>
-          <button type="submit" class="px-5 py-2 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">
-            Save Book
-          </button>
+        <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+          <button type="button" id="cancelBookModalBtn" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 transition">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-[#1b2621] hover:bg-[#283831] text-white font-semibold transition shadow-sm">Save Book</button>
         </div>
       </form>
     </div>
   </div>
 
   <!-- Issue Book Modal -->
-  <div id="issueModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all animate-in fade-in zoom-in duration-200">
-      <div class="bg-gradient-to-r from-teal-800 to-emerald-700 p-5 text-white flex justify-between items-center">
+  <div id="issueModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden">
+      <div class="bg-amber-500 p-5 text-slate-950 flex justify-between items-center">
         <div>
-          <h3 class="text-lg font-bold">Issue Book to Member</h3>
-          <p class="text-xs text-teal-100" id="issueModalBookTitle">Book Title</p>
+          <h3 class="text-base font-bold">Issue Book to Member</h3>
+          <p class="text-[11px] text-slate-800" id="issueModalBookTitle">Book Title</p>
         </div>
-        <button id="closeIssueModalBtn" class="text-white/80 hover:text-white text-xl">
+        <button id="closeIssueModalBtn" class="text-slate-900 hover:text-black text-lg">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <form id="issueForm" class="p-6 space-y-4">
+      <form id="issueForm" class="p-6 space-y-3.5 text-xs">
         <input type="hidden" id="issueBookId">
 
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Borrower / Member Name <span class="text-red-500">*</span></label>
-          <input type="text" id="borrowerName" required placeholder="e.g. Maya Indah" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          <label class="block font-semibold text-slate-700 mb-1">Borrower Name <span class="text-red-500">*</span></label>
+          <input type="text" id="borrowerName" required placeholder="Maya Indah" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-amber-500">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Member ID / Student ID <span class="text-red-500">*</span></label>
-          <input type="text" id="borrowerId" required placeholder="e.g. MBR-2024-089" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          <label class="block font-semibold text-slate-700 mb-1">Member ID / NIM <span class="text-red-500">*</span></label>
+          <input type="text" id="borrowerId" required placeholder="MBR-2024-089" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-amber-500">
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Issue Date</label>
-            <input type="date" id="issueDate" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <label class="block font-semibold text-slate-700 mb-1">Issue Date</label>
+            <input type="date" id="issueDate" required class="w-full px-3 py-2 rounded-xl border border-slate-200">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Due Return Date</label>
-            <input type="date" id="dueDate" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <label class="block font-semibold text-slate-700 mb-1">Return Due</label>
+            <input type="date" id="dueDate" required class="w-full px-3 py-2 rounded-xl border border-slate-200">
           </div>
         </div>
 
-        <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
-          <button type="button" id="cancelIssueBtn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
-            Cancel
-          </button>
-          <button type="submit" class="px-5 py-2 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">
-            Confirm Issue
-          </button>
+        <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+          <button type="button" id="cancelIssueBtn" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold transition">Confirm Issue</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Toast Container -->
+  <!-- Toast Notification -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
-
-  <!-- Footer -->
-  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-    <p>Auspify Technologies Software Development Internship • <strong>Task 2: Library Management System</strong></p>
-  </footer>
 
   <script src="app.js"></script>
 </body>

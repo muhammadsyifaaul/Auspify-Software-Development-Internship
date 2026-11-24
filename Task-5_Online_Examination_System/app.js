@@ -1,20 +1,11 @@
 /**
- * Task 5 - Online Examination System
- * Auspify Technologies Software Development Internship
- * Features:
- * - Student Authentication & Session Management
- * - Dynamic Exam Catalog loading (from exams.json with fallback)
- * - Search & Filter (Category, Difficulty)
- * - Timed Examination Room with live countdown timer
- * - Interactive Question Navigation & Palette
- * - Automated Result & Scoring calculation
- * - Printable Certificate / Scorecard
+ * Task 5 - Online Examination System (ExamVerse CBT)
+ * Archetype: Computer-Based Test (CBT) Cockpit & Certificate Generator
  */
 
 const STORAGE_AUTH_USER = 'auspify_exam_user_v1';
 const STORAGE_EXAM_RESULTS = 'auspify_exam_results_v1';
 
-// Fallback Exam Data in case JSON fetch is blocked by local file:// policy
 const fallbackExams = [
   {
     id: "EXAM-CS-101",
@@ -90,7 +81,7 @@ const fallbackExams = [
         question: "What will `typeof NaN` evaluate to in JavaScript?",
         options: ["'undefined'", "'nan'", "'number'", "'object'"],
         correctIndex: 2,
-        explanation: "According to the IEEE 754 floating-point standard, NaN is technically a numerical value."
+        explanation: "NaN is technically of type number."
       },
       {
         id: 4,
@@ -115,14 +106,14 @@ const fallbackExams = [
         question: "Which normal form removes partial functional dependencies on a composite primary key?",
         options: ["First Normal Form (1NF)", "Second Normal Form (2NF)", "Third Normal Form (3NF)", "Boyce-Codd Normal Form (BCNF)"],
         correctIndex: 1,
-        explanation: "2NF requires 1NF and no non-prime attribute to be dependent on any proper subset of any candidate key."
+        explanation: "2NF requires 1NF and no partial dependencies on candidate keys."
       },
       {
         id: 2,
         question: "What does the 'I' in ACID transaction properties stand for?",
         options: ["Integrity", "Isolation", "Indexing", "Immutable"],
         correctIndex: 1,
-        explanation: "Isolation ensures concurrent transactions execute without interfering with one another."
+        explanation: "Isolation prevents concurrent transaction race conditions."
       },
       {
         id: 3,
@@ -133,10 +124,10 @@ const fallbackExams = [
       },
       {
         id: 4,
-        question: "Which index structure is most commonly utilized by relational database storage engines for range queries?",
+        question: "Which index structure is most commonly utilized for range queries in relational databases?",
         options: ["Hash Index", "B+ Tree", "Skip List", "Trie"],
         correctIndex: 1,
-        explanation: "B+ Trees store sequential pointers across leaf nodes, making range queries exceptionally fast."
+        explanation: "B+ Trees support efficient sequential range lookups."
       }
     ]
   }
@@ -144,295 +135,194 @@ const fallbackExams = [
 
 let exams = [];
 let currentUser = null;
-let completedResults = [];
-
-// Active Exam State
 let currentExam = null;
 let currentQuestionIndex = 0;
-let userAnswers = {}; // { [qIndex]: selectedOptionIndex }
+let userAnswers = {}; // { [idx]: optionIndex }
+let flaggedQuestions = new Set();
 let timerInterval = null;
 let secondsRemaining = 0;
 let startTime = null;
 
-// DOM View References
+// DOM
 const viewCatalog = document.getElementById('viewCatalog');
-const viewExamInterface = document.getElementById('viewExamInterface');
-const viewResult = document.getElementById('viewResult');
+const viewCbtCockpit = document.getElementById('viewCbtCockpit');
+const viewCertificate = document.getElementById('viewCertificate');
 
-// Header Auth
-const authBtn = document.getElementById('authBtn');
-const authBtnText = document.getElementById('authBtnText');
-const authUserBadge = document.getElementById('authUserBadge');
-const headerUserName = document.getElementById('headerUserName');
+// Header
+const topCandidateDisplay = document.getElementById('topCandidateDisplay');
+const switchCandidateBtn = document.getElementById('switchCandidateBtn');
 const authModal = document.getElementById('authModal');
 const authForm = document.getElementById('authForm');
-const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
+const closeAuthBtn = document.getElementById('closeAuthBtn');
 const authNameInput = document.getElementById('authNameInput');
 const authIdInput = document.getElementById('authIdInput');
-const authEmailInput = document.getElementById('authEmailInput');
 
-// Catalog DOM
+// Catalog
 const examsGrid = document.getElementById('examsGrid');
 const searchExamInput = document.getElementById('searchExamInput');
 const examCategoryFilter = document.getElementById('examCategoryFilter');
 const examDifficultyFilter = document.getElementById('examDifficultyFilter');
-const statTotalExams = document.getElementById('statTotalExams');
-const statCompletedTests = document.getElementById('statCompletedTests');
-const statAvgScore = document.getElementById('statAvgScore');
 
-// Active Exam DOM
-const activeExamCategoryBadge = document.getElementById('activeExamCategoryBadge');
-const activeExamTitle = document.getElementById('activeExamTitle');
-const timerDisplay = document.getElementById('timerDisplay');
-const finishExamBtn = document.getElementById('finishExamBtn');
-const questionNumberIndicator = document.getElementById('questionNumberIndicator');
-const currentQuestionText = document.getElementById('currentQuestionText');
-const optionsContainer = document.getElementById('optionsContainer');
-const prevQuestionBtn = document.getElementById('prevQuestionBtn');
-const nextQuestionBtn = document.getElementById('nextQuestionBtn');
-const questionPaletteGrid = document.getElementById('questionPaletteGrid');
+// CBT Proctor Bar
+const cbtSubjectBadge = document.getElementById('cbtSubjectBadge');
+const cbtExamTitle = document.getElementById('cbtExamTitle');
+const cbtTimerDisplay = document.getElementById('cbtTimerDisplay');
+const cbtSubmitBtn = document.getElementById('cbtSubmitBtn');
 
-// Result DOM
-const resultIconContainer = document.getElementById('resultIconContainer');
-const resultBadge = document.getElementById('resultBadge');
-const resultExamTitle = document.getElementById('resultExamTitle');
-const resultFeedback = document.getElementById('resultFeedback');
-const resultScorePercent = document.getElementById('resultScorePercent');
-const resultCorrectCount = document.getElementById('resultCorrectCount');
-const resultTimeTaken = document.getElementById('resultTimeTaken');
-const backToCatalogBtn = document.getElementById('backToCatalogBtn');
-const printCertBtn = document.getElementById('printCertBtn');
+// CBT Palette & Canvas
+const cbtPaletteGrid = document.getElementById('cbtPaletteGrid');
+const paletteAnsweredProgress = document.getElementById('paletteAnsweredProgress');
+const cbtQuestionIndexIndicator = document.getElementById('cbtQuestionIndexIndicator');
+const flagQuestionBtn = document.getElementById('flagQuestionBtn');
+const cbtQuestionPrompt = document.getElementById('cbtQuestionPrompt');
+const cbtOptionsList = document.getElementById('cbtOptionsList');
+const cbtPrevBtn = document.getElementById('cbtPrevBtn');
+const cbtNextBtn = document.getElementById('cbtNextBtn');
+const cbtClearBtn = document.getElementById('cbtClearBtn');
+
+// Certificate Elements
+const certCandidateName = document.getElementById('certCandidateName');
+const certExamTitle = document.getElementById('certExamTitle');
+const certScore = document.getElementById('certScore');
+const certQuestions = document.getElementById('certQuestions');
+const certTime = document.getElementById('certTime');
+const certIssueDate = document.getElementById('certIssueDate');
+const certBackToCatalogBtn = document.getElementById('certBackToCatalogBtn');
 
 document.addEventListener('DOMContentLoaded', async () => {
-  loadAuthUser();
-  loadResults();
-  await fetchExams();
+  loadUser();
+  await loadExams();
   setupEventListeners();
   renderCatalog();
 });
 
-function loadAuthUser() {
+function loadUser() {
   const stored = localStorage.getItem(STORAGE_AUTH_USER);
-  if (stored) {
-    try {
-      currentUser = JSON.parse(stored);
-      updateAuthUI();
-    } catch (e) {
-      currentUser = null;
-    }
-  } else {
-    // Default guest candidate
-    currentUser = {
-      name: 'Muhammad Syifaaul',
-      id: 'AUSP-2026-08',
-      email: 'candidate@auspify.com'
-    };
-    saveAuthUser();
-    updateAuthUI();
-  }
+  currentUser = stored ? JSON.parse(stored) : {
+    name: 'Muhammad Syifaaul',
+    id: 'AUSP-2026-08'
+  };
+  topCandidateDisplay.textContent = `Candidate: ${currentUser.name} (${currentUser.id})`;
 }
 
-function saveAuthUser() {
-  localStorage.setItem(STORAGE_AUTH_USER, JSON.stringify(currentUser));
-}
-
-function updateAuthUI() {
-  if (currentUser) {
-    headerUserName.textContent = currentUser.name;
-    authUserBadge.classList.remove('hidden');
-    authBtnText.textContent = 'Switch Candidate';
-  } else {
-    authUserBadge.classList.add('hidden');
-    authBtnText.textContent = 'Sign In';
-  }
-}
-
-function loadResults() {
-  const stored = localStorage.getItem(STORAGE_EXAM_RESULTS);
-  if (stored) {
-    try {
-      completedResults = JSON.parse(stored);
-    } catch (e) {
-      completedResults = [];
-    }
-  }
-  updateStats();
-}
-
-function saveResults() {
-  localStorage.setItem(STORAGE_EXAM_RESULTS, JSON.stringify(completedResults));
-  updateStats();
-}
-
-async function fetchExams() {
+async function loadExams() {
   try {
     const res = await fetch('exams.json');
-    if (!res.ok) throw new Error('Network error loading exams');
+    if (!res.ok) throw new Error();
     exams = await res.json();
-  } catch (err) {
-    console.warn('Using embedded exams fallback:', err);
+  } catch (e) {
     exams = [...fallbackExams];
   }
 }
 
 function setupEventListeners() {
-  // Auth
-  authBtn.addEventListener('click', () => {
-    if (currentUser) {
-      authNameInput.value = currentUser.name;
-      authIdInput.value = currentUser.id;
-      authEmailInput.value = currentUser.email || '';
-    }
+  switchCandidateBtn.addEventListener('click', () => {
+    authNameInput.value = currentUser.name;
+    authIdInput.value = currentUser.id;
     authModal.classList.remove('hidden');
   });
-  closeAuthModalBtn.addEventListener('click', () => authModal.classList.add('hidden'));
+  closeAuthBtn.addEventListener('click', () => authModal.classList.add('hidden'));
   authForm.addEventListener('submit', (e) => {
     e.preventDefault();
     currentUser = {
       name: authNameInput.value.trim(),
-      id: authIdInput.value.trim(),
-      email: authEmailInput.value.trim()
+      id: authIdInput.value.trim()
     };
-    saveAuthUser();
-    updateAuthUI();
+    localStorage.setItem(STORAGE_AUTH_USER, JSON.stringify(currentUser));
+    topCandidateDisplay.textContent = `Candidate: ${currentUser.name} (${currentUser.id})`;
     authModal.classList.add('hidden');
-    showToast(`Signed in as ${currentUser.name}!`, 'success');
+    showToast('Candidate ID updated', 'success');
   });
 
-  // Filters
   searchExamInput.addEventListener('input', renderCatalog);
   examCategoryFilter.addEventListener('change', renderCatalog);
   examDifficultyFilter.addEventListener('change', renderCatalog);
 
-  // Exam interface navigation
-  prevQuestionBtn.addEventListener('click', () => {
+  // CBT Controls
+  cbtPrevBtn.addEventListener('click', () => {
     if (currentQuestionIndex > 0) {
       currentQuestionIndex--;
-      renderActiveQuestion();
+      renderActiveCbtQuestion();
     }
   });
 
-  nextQuestionBtn.addEventListener('click', () => {
+  cbtNextBtn.addEventListener('click', () => {
     if (currentQuestionIndex < currentExam.questions.length - 1) {
       currentQuestionIndex++;
-      renderActiveQuestion();
+      renderActiveCbtQuestion();
     }
   });
 
-  finishExamBtn.addEventListener('click', () => {
+  cbtClearBtn.addEventListener('click', () => {
+    delete userAnswers[currentQuestionIndex];
+    renderActiveCbtQuestion();
+  });
+
+  flagQuestionBtn.addEventListener('click', () => {
+    if (flaggedQuestions.has(currentQuestionIndex)) {
+      flaggedQuestions.delete(currentQuestionIndex);
+    } else {
+      flaggedQuestions.add(currentQuestionIndex);
+    }
+    renderActiveCbtQuestion();
+  });
+
+  cbtSubmitBtn.addEventListener('click', () => {
     const answeredCount = Object.keys(userAnswers).length;
     const total = currentExam.questions.length;
-    if (answeredCount < total) {
-      if (!confirm(`You have answered ${answeredCount} of ${total} questions. Are you sure you want to finish and submit now?`)) {
-        return;
-      }
-    } else {
-      if (!confirm('Are you ready to submit your assessment for scoring?')) return;
+    if (confirm(`You answered ${answeredCount} of ${total} questions. Ready to submit for scoring?`)) {
+      finalizeCbtExam();
     }
-    finalizeExam();
   });
 
-  // Result navigation
-  backToCatalogBtn.addEventListener('click', () => {
-    viewResult.classList.add('hidden');
+  certBackToCatalogBtn.addEventListener('click', () => {
+    viewCertificate.classList.add('hidden');
     viewCatalog.classList.remove('hidden');
     renderCatalog();
   });
-
-  printCertBtn.addEventListener('click', () => {
-    window.print();
-  });
-}
-
-function updateStats() {
-  statTotalExams.textContent = exams.length;
-  statCompletedTests.textContent = completedResults.length;
-
-  if (completedResults.length > 0) {
-    const totalScore = completedResults.reduce((acc, r) => acc + r.scorePercent, 0);
-    const avg = Math.round(totalScore / completedResults.length);
-    statAvgScore.textContent = `${avg}%`;
-  } else {
-    statAvgScore.textContent = '0%';
-  }
 }
 
 function renderCatalog() {
-  updateStats();
   const query = searchExamInput.value.toLowerCase().trim();
-  const category = examCategoryFilter.value;
-  const difficulty = examDifficultyFilter.value;
+  const cat = examCategoryFilter.value;
+  const diff = examDifficultyFilter.value;
 
   const filtered = exams.filter(e => {
-    const matchesQuery = !query ||
-      e.title.toLowerCase().includes(query) ||
-      e.description.toLowerCase().includes(query) ||
-      e.category.toLowerCase().includes(query);
-
-    const matchesCat = !category || e.category === category;
-    const matchesDiff = !difficulty || e.difficulty === difficulty;
-
-    return matchesQuery && matchesCat && matchesDiff;
+    const matchesQ = !query || e.title.toLowerCase().includes(query) || e.description.toLowerCase().includes(query);
+    const matchesC = !cat || e.category === cat;
+    const matchesD = !diff || e.difficulty === diff;
+    return matchesQ && matchesC && matchesD;
   });
 
   examsGrid.innerHTML = '';
-  if (filtered.length === 0) {
-    examsGrid.innerHTML = `
-      <div class="col-span-full text-center py-12 bg-white rounded-2xl border border-slate-200">
-        <i class="fa-solid fa-graduation-cap text-4xl text-slate-300 mb-3"></i>
-        <p class="text-sm text-slate-500 font-semibold">No assessments match your filter criteria.</p>
-      </div>
-    `;
-    return;
-  }
-
-  filtered.forEach(exam => {
+  filtered.forEach(e => {
     const card = document.createElement('div');
-    card.className = 'bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition flex flex-col justify-between overflow-hidden group';
-
-    const diffBadge = exam.difficulty === 'Beginner' ? 'bg-emerald-100 text-emerald-700' :
-                      exam.difficulty === 'Intermediate' ? 'bg-amber-100 text-amber-700' : 'bg-purple-100 text-purple-700';
-
-    // Check if user previously took this exam
-    const previousAttempt = completedResults.find(r => r.examId === exam.id);
+    card.className = 'bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs hover:shadow-md transition flex flex-col justify-between group';
 
     card.innerHTML = `
-      <div class="p-6">
+      <div>
         <div class="flex items-center justify-between mb-3">
-          <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${diffBadge}">
-            ${exam.difficulty}
-          </span>
-          <span class="text-xs text-slate-400 font-medium">
-            <i class="fa-regular fa-clock mr-1"></i>${exam.durationMinutes} mins
-          </span>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+            e.difficulty === 'Beginner' ? 'bg-emerald-100 text-emerald-800' :
+            e.difficulty === 'Intermediate' ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800'
+          }">${e.difficulty}</span>
+          <span class="text-xs text-slate-400 font-mono"><i class="fa-regular fa-clock mr-1"></i>${e.durationMinutes} min</span>
         </div>
 
-        <h3 class="text-base font-bold text-slate-800 group-hover:text-indigo-600 transition">
-          ${escapeHtml(exam.title)}
-        </h3>
+        <h3 class="font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition">${escapeHtml(e.title)}</h3>
+        <p class="text-xs text-slate-500 mt-2 line-clamp-2">${escapeHtml(e.description)}</p>
 
-        <p class="text-xs text-slate-500 mt-2 line-clamp-2">
-          ${escapeHtml(exam.description)}
-        </p>
-
-        <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-          <span><i class="fa-solid fa-circle-question text-indigo-500 mr-1"></i>${exam.questions.length} Questions</span>
-          <span><i class="fa-solid fa-bullseye text-amber-500 mr-1"></i>Pass: ${exam.passingScore}%</span>
+        <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between text-xs text-slate-600">
+          <span><i class="fa-solid fa-list-check text-indigo-500 mr-1"></i>${e.questions.length} Items</span>
+          <span>Pass Mark: <strong>${e.passingScore}%</strong></span>
         </div>
       </div>
 
-      <div class="p-4 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between">
-        ${previousAttempt ? `
-          <div class="text-xs">
-            <span class="text-slate-400">Best Score:</span>
-            <span class="font-bold ${previousAttempt.passed ? 'text-emerald-600' : 'text-rose-600'}">${previousAttempt.scorePercent}%</span>
-          </div>
-        ` : `
-          <span class="text-xs text-slate-400">Not Attempted</span>
-        `}
-        <button onclick="startExam('${exam.id}')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition shadow-sm inline-flex items-center space-x-1">
-          <span>${previousAttempt ? 'Retake Exam' : 'Start Assessment'}</span>
-          <i class="fa-solid fa-arrow-right text-xs"></i>
+      <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+        <span class="text-[11px] text-slate-400 font-mono">Proctored CBT</span>
+        <button onclick="startCbt('${e.id}')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs transition shadow-xs inline-flex items-center space-x-1.5">
+          <span>Start Assessment</span>
+          <i class="fa-solid fa-arrow-right text-[10px]"></i>
         </button>
       </div>
     `;
@@ -440,214 +330,177 @@ function renderCatalog() {
   });
 }
 
-function startExam(examId) {
-  const exam = exams.find(e => e.id === examId);
-  if (!exam) return;
+function startCbt(examId) {
+  const e = exams.find(item => item.id === examId);
+  if (!e) return;
 
-  currentExam = exam;
+  currentExam = e;
   currentQuestionIndex = 0;
   userAnswers = {};
+  flaggedQuestions.clear();
   startTime = new Date();
-  secondsRemaining = exam.durationMinutes * 60;
+  secondsRemaining = e.durationMinutes * 60;
 
-  activeExamCategoryBadge.textContent = exam.category;
-  activeExamTitle.textContent = exam.title;
+  cbtSubjectBadge.textContent = e.category;
+  cbtExamTitle.textContent = e.title;
 
   viewCatalog.classList.add('hidden');
-  viewResult.classList.add('hidden');
-  viewExamInterface.classList.remove('hidden');
+  viewCertificate.classList.add('hidden');
+  viewCbtCockpit.classList.remove('hidden');
 
   startTimer();
-  renderActiveQuestion();
+  renderActiveCbtQuestion();
 }
 
 function startTimer() {
   clearInterval(timerInterval);
-  updateTimerDisplay();
+  updateTimerText();
 
   timerInterval = setInterval(() => {
     secondsRemaining--;
-    updateTimerDisplay();
+    updateTimerText();
 
     if (secondsRemaining <= 0) {
       clearInterval(timerInterval);
-      showToast('Time expired! Submitting your exam automatically...', 'info');
-      finalizeExam();
+      showToast('Time expired! Auto submitting assessment...', 'info');
+      finalizeCbtExam();
     }
   }, 1000);
 }
 
-function updateTimerDisplay() {
+function updateTimerText() {
   const mins = Math.floor(secondsRemaining / 60);
   const secs = secondsRemaining % 60;
-  timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  cbtTimerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
-function renderActiveQuestion() {
+function renderActiveCbtQuestion() {
   const q = currentExam.questions[currentQuestionIndex];
   const total = currentExam.questions.length;
 
-  questionNumberIndicator.textContent = `Question ${currentQuestionIndex + 1} of ${total}`;
-  currentQuestionText.textContent = q.question;
+  cbtQuestionIndexIndicator.textContent = `Question ${currentQuestionIndex + 1} of ${total}`;
+  cbtQuestionPrompt.textContent = q.question;
 
-  // Render options
-  optionsContainer.innerHTML = '';
+  // Flag Status
+  const isFlagged = flaggedQuestions.has(currentQuestionIndex);
+  flagQuestionBtn.className = isFlagged
+    ? 'text-xs text-amber-600 font-bold inline-flex items-center space-x-1 transition'
+    : 'text-xs text-slate-400 hover:text-amber-600 font-semibold inline-flex items-center space-x-1 transition';
+  flagQuestionBtn.innerHTML = `<i class="${isFlagged ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i><span>${isFlagged ? 'Review Flagged' : 'Mark for Review'}</span>`;
+
+  // Options
+  cbtOptionsList.innerHTML = '';
   q.options.forEach((opt, idx) => {
     const isSelected = userAnswers[currentQuestionIndex] === idx;
     const btn = document.createElement('button');
-    btn.className = `w-full text-left p-4 rounded-xl border transition flex items-center justify-between text-sm ${
-      isSelected 
-        ? 'border-indigo-600 bg-indigo-50/60 text-indigo-900 font-semibold shadow-sm ring-1 ring-indigo-600' 
-        : 'border-slate-200 hover:bg-slate-50 text-slate-700'
+    btn.className = `w-full text-left p-4 rounded-xl border transition flex items-center justify-between text-xs ${
+      isSelected
+        ? 'border-indigo-600 bg-indigo-50/70 text-indigo-950 font-semibold shadow-xs ring-1 ring-indigo-600'
+        : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
     }`;
 
     btn.innerHTML = `
       <div class="flex items-center space-x-3">
-        <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-          isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'
-        }">
-          ${String.fromCharCode(65 + idx)}
-        </span>
-        <span>${escapeHtml(opt)}</span>
+        <span class="w-6 h-6 rounded-lg font-bold flex items-center justify-center text-xs ${
+          isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
+        }">${String.fromCharCode(65 + idx)}</span>
+        <span class="text-xs leading-relaxed">${escapeHtml(opt)}</span>
       </div>
-      ${isSelected ? '<i class="fa-solid fa-circle-check text-indigo-600 text-base"></i>' : ''}
+      ${isSelected ? '<i class="fa-solid fa-circle-check text-indigo-600 text-sm"></i>' : ''}
     `;
 
     btn.addEventListener('click', () => {
       userAnswers[currentQuestionIndex] = idx;
-      renderActiveQuestion();
-      renderPalette();
+      renderActiveCbtQuestion();
     });
 
-    optionsContainer.appendChild(btn);
+    cbtOptionsList.appendChild(btn);
   });
 
-  // Buttons state
-  prevQuestionBtn.disabled = currentQuestionIndex === 0;
-  prevQuestionBtn.className = currentQuestionIndex === 0 
+  // Buttons State
+  cbtPrevBtn.disabled = currentQuestionIndex === 0;
+  cbtPrevBtn.className = currentQuestionIndex === 0
     ? 'px-4 py-2 rounded-xl border border-slate-100 text-xs font-semibold text-slate-300 cursor-not-allowed'
-    : 'px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition';
+    : 'px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50';
 
-  if (currentQuestionIndex === total - 1) {
-    nextQuestionBtn.textContent = 'Review Answers';
-  } else {
-    nextQuestionBtn.innerHTML = 'Next <i class="fa-solid fa-arrow-right ml-1"></i>';
-  }
+  cbtNextBtn.innerHTML = currentQuestionIndex === total - 1
+    ? 'Review Complete <i class="fa-solid fa-check ml-1"></i>'
+    : 'Next Question <i class="fa-solid fa-arrow-right ml-1"></i>';
 
   renderPalette();
 }
 
 function renderPalette() {
-  questionPaletteGrid.innerHTML = '';
+  cbtPaletteGrid.innerHTML = '';
+  const total = currentExam.questions.length;
+  const answeredCount = Object.keys(userAnswers).length;
+  paletteAnsweredProgress.textContent = `${answeredCount} / ${total} Done`;
+
   currentExam.questions.forEach((_, idx) => {
-    const isCurrent = idx === currentQuestionIndex;
-    const isAnswered = userAnswers.hasOwnProperty(idx);
+    const isCur = idx === currentQuestionIndex;
+    const isAns = userAnswers.hasOwnProperty(idx);
+    const isFlg = flaggedQuestions.has(idx);
 
     const btn = document.createElement('button');
-    btn.className = `h-9 rounded-lg font-bold text-xs transition flex items-center justify-center ${
-      isCurrent 
-        ? 'ring-2 ring-indigo-600 ring-offset-1 ' 
-        : ''
-    } ${
-      isAnswered 
-        ? 'bg-indigo-600 text-white' 
-        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+    let colorClass = 'bg-slate-100 text-slate-600 hover:bg-slate-200';
+    if (isAns) colorClass = 'bg-emerald-600 text-white font-bold';
+    else if (isFlg) colorClass = 'bg-amber-400 text-slate-900 font-bold';
+
+    btn.className = `h-9 rounded-lg font-mono text-xs transition flex items-center justify-center ${colorClass} ${
+      isCur ? 'ring-2 ring-indigo-600 ring-offset-2' : ''
     }`;
     btn.textContent = idx + 1;
     btn.addEventListener('click', () => {
       currentQuestionIndex = idx;
-      renderActiveQuestion();
+      renderActiveCbtQuestion();
     });
-    questionPaletteGrid.appendChild(btn);
+    cbtPaletteGrid.appendChild(btn);
   });
 }
 
-function finalizeExam() {
+function finalizeCbtExam() {
   clearInterval(timerInterval);
 
   let correctCount = 0;
   currentExam.questions.forEach((q, idx) => {
-    if (userAnswers[idx] === q.correctIndex) {
-      correctCount++;
-    }
+    if (userAnswers[idx] === q.correctIndex) correctCount++;
   });
 
   const total = currentExam.questions.length;
   const scorePercent = Math.round((correctCount / total) * 100);
   const passed = scorePercent >= currentExam.passingScore;
 
-  const endTime = new Date();
-  const timeTakenSeconds = Math.max(1, Math.round((endTime - startTime) / 1000));
-  const timeMins = Math.floor(timeTakenSeconds / 60);
-  const timeSecs = timeTakenSeconds % 60;
-  const timeStr = `${timeMins.toString().padStart(2, '0')}:${timeSecs.toString().padStart(2, '0')}`;
+  const durationSec = Math.max(1, Math.round((new Date() - startTime) / 1000));
+  const timeStr = `${Math.floor(durationSec / 60).toString().padStart(2, '0')}:${(durationSec % 60).toString().padStart(2, '0')}`;
 
-  const resultRecord = {
-    examId: currentExam.id,
-    examTitle: currentExam.title,
-    candidateName: currentUser ? currentUser.name : 'Guest Candidate',
-    candidateId: currentUser ? currentUser.id : 'N/A',
-    scorePercent,
-    correctCount,
-    totalQuestions: total,
-    passed,
-    date: new Date().toISOString().split('T')[0],
-    timeTaken: timeStr
-  };
+  // Populate Certificate
+  certCandidateName.textContent = currentUser.name;
+  certExamTitle.textContent = currentExam.title;
+  certScore.textContent = `${scorePercent}%`;
+  certQuestions.textContent = `${correctCount} / ${total}`;
+  certTime.textContent = timeStr;
+  certIssueDate.textContent = `Date of Issue: ${new Date().toISOString().split('T')[0]}`;
 
-  // Upsert result
-  const existingIdx = completedResults.findIndex(r => r.examId === currentExam.id);
-  if (existingIdx !== -1) {
-    completedResults[existingIdx] = resultRecord;
-  } else {
-    completedResults.unshift(resultRecord);
-  }
-  saveResults();
-
-  // Render Result UI
-  resultExamTitle.textContent = currentExam.title;
-  resultScorePercent.textContent = `${scorePercent}%`;
-  resultCorrectCount.textContent = `${correctCount} / ${total}`;
-  resultTimeTaken.textContent = timeStr;
+  viewCbtCockpit.classList.add('hidden');
+  viewCertificate.classList.remove('hidden');
 
   if (passed) {
-    resultIconContainer.className = 'w-20 h-20 rounded-full mx-auto flex items-center justify-center text-3xl shadow-inner bg-emerald-100 text-emerald-600';
-    resultIconContainer.innerHTML = '<i class="fa-solid fa-trophy"></i>';
-    resultBadge.className = 'px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200';
-    resultBadge.textContent = 'Assessment Passed';
-    resultFeedback.textContent = `Congratulations, ${resultRecord.candidateName}! You have successfully demonstrated competency in ${currentExam.category}.`;
-    printCertBtn.classList.remove('hidden');
+    showToast(`Passed with ${scorePercent}%! Certificate unlocked.`, 'success');
   } else {
-    resultIconContainer.className = 'w-20 h-20 rounded-full mx-auto flex items-center justify-center text-3xl shadow-inner bg-rose-100 text-rose-600';
-    resultIconContainer.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
-    resultBadge.className = 'px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200';
-    resultBadge.textContent = 'Assessment Failed';
-    resultFeedback.textContent = `You scored ${scorePercent}%, which is below the passing requirement of ${currentExam.passingScore}%. You can review the material and retake the exam anytime.`;
+    showToast(`Assessment finished: Score ${scorePercent}% (Pass Mark: ${currentExam.passingScore}%)`, 'info');
   }
-
-  viewExamInterface.classList.add('hidden');
-  viewResult.classList.remove('hidden');
 }
 
 function showToast(message, type = 'info') {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
-  
-  const icon = type === 'success' ? 'fa-circle-check text-emerald-500' : 
-               type === 'error' ? 'fa-triangle-exclamation text-rose-500' : 'fa-circle-info text-indigo-500';
-  
-  toast.className = 'toast-enter pointer-events-auto bg-white border border-slate-200 shadow-xl px-4 py-3 rounded-xl flex items-center space-x-3 text-sm text-slate-700 min-w-[280px] max-w-sm';
-  toast.innerHTML = `
-    <i class="fa-solid ${icon} text-lg"></i>
-    <span class="flex-1 font-medium">${message}</span>
-  `;
-
+  toast.className = 'toast-enter pointer-events-auto bg-[#0f172a] text-white shadow-xl px-4 py-2.5 rounded-xl flex items-center space-x-2.5 text-xs min-w-[240px] border border-slate-700';
+  toast.innerHTML = `<i class="fa-solid fa-circle-check text-indigo-400"></i><span class="font-medium">${message}</span>`;
   container.appendChild(toast);
-
   setTimeout(() => {
-    toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
+    toast.classList.add('opacity-0', 'transition-opacity', 'duration-200');
+    setTimeout(() => toast.remove(), 200);
+  }, 2500);
 }
 
 function escapeHtml(string) {
@@ -660,4 +513,4 @@ function escapeHtml(string) {
     .replace(/'/g, '&#039;');
 }
 
-window.startExam = startExam;
+window.startCbt = startCbt;

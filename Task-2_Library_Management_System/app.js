@@ -1,18 +1,11 @@
 /**
- * Task 2 - Library Management System
- * Auspify Technologies Software Development Internship
- * Features:
- * - Book Catalog Management (Add, Edit, Delete, Stock control)
- * - Book Issue and Return workflow with due date tracking & fine calculation
- * - Dynamic Search & Filter by Category / Availability
- * - Report Generation and CSV Export
- * - LocalStorage Persistence
+ * Task 2 - Library Management System (LibroSync Hub)
+ * Archetype: Digital Bookshelf & Circulation Desk
  */
 
 const STORAGE_BOOKS_KEY = 'auspify_library_books_v1';
 const STORAGE_TRANS_KEY = 'auspify_library_transactions_v1';
 
-// Initial Mock Seed Books
 const initialBooks = [
   {
     id: 'BK-1001',
@@ -23,18 +16,20 @@ const initialBooks = [
     shelf: 'Rack A-01',
     year: 2008,
     totalCopies: 5,
-    availableCopies: 3
+    availableCopies: 3,
+    coverGradient: 'from-blue-900 to-indigo-950'
   },
   {
     id: 'BK-1002',
     title: 'Design Patterns: Elements of Reusable Object-Oriented Software',
-    author: 'Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides',
+    author: 'Erich Gamma, Richard Helm',
     isbn: '978-0201633610',
     category: 'Software Engineering',
     shelf: 'Rack A-02',
     year: 1994,
     totalCopies: 4,
-    availableCopies: 4
+    availableCopies: 4,
+    coverGradient: 'from-emerald-900 to-teal-950'
   },
   {
     id: 'BK-1003',
@@ -45,7 +40,8 @@ const initialBooks = [
     shelf: 'Rack B-04',
     year: 2009,
     totalCopies: 6,
-    availableCopies: 2
+    availableCopies: 2,
+    coverGradient: 'from-amber-900 to-stone-950'
   },
   {
     id: 'BK-1004',
@@ -56,7 +52,8 @@ const initialBooks = [
     shelf: 'Rack C-01',
     year: 2020,
     totalCopies: 3,
-    availableCopies: 1
+    availableCopies: 1,
+    coverGradient: 'from-purple-900 to-violet-950'
   },
   {
     id: 'BK-1005',
@@ -67,11 +64,11 @@ const initialBooks = [
     shelf: 'Rack D-02',
     year: 2019,
     totalCopies: 4,
-    availableCopies: 4
+    availableCopies: 4,
+    coverGradient: 'from-cyan-900 to-slate-950'
   }
 ];
 
-// Initial Transactions
 const initialTransactions = [
   {
     id: 'TRX-901',
@@ -82,7 +79,7 @@ const initialTransactions = [
     issueDate: '2026-11-10',
     dueDate: '2026-11-24',
     returnDate: null,
-    status: 'Active' // Active or Returned
+    status: 'Active'
   },
   {
     id: 'TRX-902',
@@ -93,40 +90,32 @@ const initialTransactions = [
     issueDate: '2026-11-01',
     dueDate: '2026-11-15',
     returnDate: null,
-    status: 'Active' // overdue!
+    status: 'Active' // Overdue
   }
 ];
 
 let books = [];
 let transactions = [];
+let selectedGenreFilter = '';
 
-// DOM references
-const booksCatalogSection = document.getElementById('booksCatalogSection');
-const transactionsSection = document.getElementById('transactionsSection');
-const tabBooksBtn = document.getElementById('tabBooksBtn');
-const tabTransactionsBtn = document.getElementById('tabTransactionsBtn');
-const transBadgeCount = document.getElementById('transBadgeCount');
-
-// Book table elements
-const booksTableBody = document.getElementById('booksTableBody');
+// DOM Elements
+const bookshelfGrid = document.getElementById('bookshelfGrid');
 const booksEmptyState = document.getElementById('booksEmptyState');
-const bookCountLabel = document.getElementById('bookCountLabel');
 const searchBookInput = document.getElementById('searchBookInput');
-const genreFilter = document.getElementById('genreFilter');
-const availabilityFilter = document.getElementById('availabilityFilter');
-const resetBookFilterBtn = document.getElementById('resetBookFilterBtn');
+const currentShelfTitle = document.getElementById('currentShelfTitle');
+const shelfSubtitle = document.getElementById('shelfSubtitle');
+const bookCountBadge = document.getElementById('bookCountBadge');
+const navTotalBooksBadge = document.getElementById('navTotalBooksBadge');
+const navLoansBadge = document.getElementById('navLoansBadge');
+const loanBadgeCounter = document.getElementById('loanBadgeCounter');
 
-// Transaction table elements
-const transTableBody = document.getElementById('transTableBody');
-const transEmptyState = document.getElementById('transEmptyState');
-const searchTransInput = document.getElementById('searchTransInput');
-const transStatusFilter = document.getElementById('transStatusFilter');
-
-// Statistics
-const statTotalBooks = document.getElementById('statTotalBooks');
-const statTotalCopies = document.getElementById('statTotalCopies');
-const statIssuedBooks = document.getElementById('statIssuedBooks');
-const statOverdueBooks = document.getElementById('statOverdueBooks');
+// Circulation Drawer
+const circulationDrawer = document.getElementById('circulationDrawer');
+const circBackdrop = document.getElementById('circBackdrop');
+const closeCircDrawerBtn = document.getElementById('closeCircDrawerBtn');
+const openCirculationDrawerBtn = document.getElementById('openCirculationDrawerBtn');
+const navCirculation = document.getElementById('navCirculation');
+const circLoansContainer = document.getElementById('circLoansContainer');
 
 // Book Modal
 const bookModal = document.getElementById('bookModal');
@@ -144,7 +133,7 @@ const closeIssueModalBtn = document.getElementById('closeIssueModalBtn');
 const cancelIssueBtn = document.getElementById('cancelIssueBtn');
 
 // Export
-const exportReportBtn = document.getElementById('exportReportBtn');
+const exportCatalogBtn = document.getElementById('exportCatalogBtn');
 
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
@@ -154,28 +143,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function loadData() {
   const storedBooks = localStorage.getItem(STORAGE_BOOKS_KEY);
-  if (storedBooks) {
-    try {
-      books = JSON.parse(storedBooks);
-    } catch (e) {
-      books = [...initialBooks];
-    }
-  } else {
-    books = [...initialBooks];
-    saveBooks();
-  }
+  books = storedBooks ? JSON.parse(storedBooks) : [...initialBooks];
+  if (!storedBooks) saveBooks();
 
   const storedTrans = localStorage.getItem(STORAGE_TRANS_KEY);
-  if (storedTrans) {
-    try {
-      transactions = JSON.parse(storedTrans);
-    } catch (e) {
-      transactions = [...initialTransactions];
-    }
-  } else {
-    transactions = [...initialTransactions];
-    saveTransactions();
-  }
+  transactions = storedTrans ? JSON.parse(storedTrans) : [...initialTransactions];
+  if (!storedTrans) saveTransactions();
 }
 
 function saveBooks() {
@@ -187,9 +160,13 @@ function saveTransactions() {
 }
 
 function setupEventListeners() {
-  // Tabs switching
-  tabBooksBtn.addEventListener('click', () => switchTab('catalog'));
-  tabTransactionsBtn.addEventListener('click', () => switchTab('transactions'));
+  searchBookInput.addEventListener('input', renderBookshelf);
+
+  // Drawer
+  openCirculationDrawerBtn.addEventListener('click', openCircDrawer);
+  navCirculation.addEventListener('click', openCircDrawer);
+  closeCircDrawerBtn.addEventListener('click', closeCircDrawer);
+  circBackdrop.addEventListener('click', closeCircDrawer);
 
   // Book Modal
   openAddBookModalBtn.addEventListener('click', () => openBookModal());
@@ -202,46 +179,40 @@ function setupEventListeners() {
   cancelIssueBtn.addEventListener('click', () => issueModal.classList.add('hidden'));
   issueForm.addEventListener('submit', handleIssueSubmit);
 
-  // Filters & Search
-  searchBookInput.addEventListener('input', renderBooks);
-  genreFilter.addEventListener('change', renderBooks);
-  availabilityFilter.addEventListener('change', renderBooks);
-  resetBookFilterBtn.addEventListener('click', () => {
-    searchBookInput.value = '';
-    genreFilter.value = '';
-    availabilityFilter.value = '';
-    renderBooks();
-  });
-
-  searchTransInput.addEventListener('input', renderTransactions);
-  transStatusFilter.addEventListener('change', renderTransactions);
-
-  exportReportBtn.addEventListener('click', exportLibraryReport);
-
-  window.addEventListener('click', (e) => {
-    if (e.target === bookModal) bookModal.classList.add('hidden');
-    if (e.target === issueModal) issueModal.classList.add('hidden');
-  });
+  exportCatalogBtn.addEventListener('click', exportCatalogCsv);
 }
 
-function switchTab(tab) {
-  if (tab === 'catalog') {
-    booksCatalogSection.classList.remove('hidden');
-    transactionsSection.classList.add('hidden');
-    tabBooksBtn.className = 'py-3 px-1 border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-2 transition';
-    tabTransactionsBtn.className = 'py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition';
+function selectGenre(genre) {
+  selectedGenreFilter = genre;
+  document.querySelectorAll('.genre-nav-btn').forEach(btn => {
+    btn.classList.remove('bg-white/10', 'text-white');
+    btn.classList.add('text-emerald-200/70');
+  });
+
+  if (genre) {
+    currentShelfTitle.textContent = `${genre} Shelf`;
+    shelfSubtitle.textContent = `Viewing selected technical collection in ${genre}`;
   } else {
-    booksCatalogSection.classList.add('hidden');
-    transactionsSection.classList.remove('hidden');
-    tabTransactionsBtn.className = 'py-3 px-1 border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-2 transition';
-    tabBooksBtn.className = 'py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition';
+    currentShelfTitle.textContent = 'Library Catalog';
+    shelfSubtitle.textContent = 'Browsing all cataloged volumes and textbooks';
   }
+
+  renderBookshelf();
+}
+
+function openCircDrawer() {
+  renderCirculation();
+  circulationDrawer.classList.remove('hidden');
+}
+
+function closeCircDrawer() {
+  circulationDrawer.classList.add('hidden');
 }
 
 function openBookModal(book = null) {
   bookForm.reset();
   if (book) {
-    bookModalTitle.textContent = 'Edit Book Details';
+    bookModalTitle.textContent = 'Edit Volume Details';
     document.getElementById('bookIdHidden').value = book.id;
     document.getElementById('bookTitle').value = book.title;
     document.getElementById('bookAuthor').value = book.author;
@@ -249,11 +220,11 @@ function openBookModal(book = null) {
     document.getElementById('bookCategory').value = book.category;
     document.getElementById('bookShelf').value = book.shelf || '';
     document.getElementById('bookTotalCopies').value = book.totalCopies;
-    document.getElementById('bookYear').value = book.year || new Date().getFullYear();
+    document.getElementById('bookYear').value = book.year || 2024;
   } else {
-    bookModalTitle.textContent = 'Add New Book to Library';
+    bookModalTitle.textContent = 'Catalog New Book';
     document.getElementById('bookIdHidden').value = '';
-    document.getElementById('bookYear').value = new Date().getFullYear();
+    document.getElementById('bookYear').value = 2024;
   }
   bookModal.classList.remove('hidden');
 }
@@ -269,13 +240,20 @@ function handleBookSubmit(e) {
   const totalCopies = parseInt(document.getElementById('bookTotalCopies').value, 10);
   const year = parseInt(document.getElementById('bookYear').value, 10);
 
+  const gradients = [
+    'from-blue-900 to-indigo-950',
+    'from-emerald-900 to-teal-950',
+    'from-amber-900 to-stone-950',
+    'from-purple-900 to-violet-950',
+    'from-cyan-900 to-slate-950'
+  ];
+  const coverGradient = gradients[Math.floor(Math.random() * gradients.length)];
+
   if (idHidden) {
     const idx = books.findIndex(b => b.id === idHidden);
     if (idx !== -1) {
       const existing = books[idx];
       const diff = totalCopies - existing.totalCopies;
-      const newAvailable = Math.max(0, existing.availableCopies + diff);
-
       books[idx] = {
         ...existing,
         title,
@@ -284,10 +262,10 @@ function handleBookSubmit(e) {
         category,
         shelf,
         totalCopies,
-        availableCopies: newAvailable,
+        availableCopies: Math.max(0, existing.availableCopies + diff),
         year
       };
-      showToast('Book details updated successfully!', 'success');
+      showToast('Volume record updated', 'success');
     }
   } else {
     const newBook = {
@@ -299,10 +277,11 @@ function handleBookSubmit(e) {
       shelf,
       totalCopies,
       availableCopies: totalCopies,
-      year
+      year,
+      coverGradient
     };
     books.unshift(newBook);
-    showToast('New book cataloged successfully!', 'success');
+    showToast('Book shelved into library catalog!', 'success');
   }
 
   saveBooks();
@@ -310,44 +289,23 @@ function handleBookSubmit(e) {
   renderAll();
 }
 
-function deleteBook(id) {
-  const book = books.find(b => b.id === id);
-  if (!book) return;
-
-  const hasActiveBorrow = transactions.some(t => t.bookId === id && t.status === 'Active');
-  if (hasActiveBorrow) {
-    alert(`Cannot delete "${book.title}" because it currently has active borrowed copies. Please process returns first.`);
-    return;
-  }
-
-  if (confirm(`Are you sure you want to remove "${book.title}" from library inventory?`)) {
-    books = books.filter(b => b.id !== id);
-    saveBooks();
-    renderAll();
-    showToast('Book removed from catalog', 'info');
-  }
-}
-
 function openIssueModal(bookId) {
   const book = books.find(b => b.id === bookId);
-  if (!book) return;
-
-  if (book.availableCopies <= 0) {
-    showToast('No copies available for checkout right now!', 'error');
+  if (!book || book.availableCopies <= 0) {
+    showToast('No copies available for checkout!', 'error');
     return;
   }
 
   issueForm.reset();
   document.getElementById('issueBookId').value = book.id;
-  issueModalBookTitle.textContent = `${book.title} (Available: ${book.availableCopies})`;
+  issueModalBookTitle.textContent = `${book.title} (${book.availableCopies} available)`;
 
   const today = new Date().toISOString().split('T')[0];
   const due = new Date();
-  due.setDate(due.getDate() + 14); // 14 days loan period standard
-  const dueDateStr = due.toISOString().split('T')[0];
+  due.setDate(due.getDate() + 14);
 
   document.getElementById('issueDate').value = today;
-  document.getElementById('dueDate').value = dueDateStr;
+  document.getElementById('dueDate').value = due.toISOString().split('T')[0];
 
   issueModal.classList.remove('hidden');
 }
@@ -360,21 +318,16 @@ function handleIssueSubmit(e) {
   const issueDate = document.getElementById('issueDate').value;
   const dueDate = document.getElementById('dueDate').value;
 
-  const bookIndex = books.findIndex(b => b.id === bookId);
-  if (bookIndex === -1 || books[bookIndex].availableCopies <= 0) {
-    showToast('Cannot issue book. Stock unavailable.', 'error');
-    return;
-  }
+  const bIdx = books.findIndex(b => b.id === bookId);
+  if (bIdx === -1 || books[bIdx].availableCopies <= 0) return;
 
-  // Deduct available copy
-  books[bookIndex].availableCopies -= 1;
+  books[bIdx].availableCopies -= 1;
   saveBooks();
 
-  // Create transaction
   const newTx = {
     id: 'TRX-' + Math.floor(100 + Math.random() * 900),
     bookId,
-    bookTitle: books[bookIndex].title,
+    bookTitle: books[bIdx].title,
     borrowerName,
     borrowerId,
     issueDate,
@@ -387,7 +340,7 @@ function handleIssueSubmit(e) {
   saveTransactions();
 
   issueModal.classList.add('hidden');
-  showToast(`Book successfully issued to ${borrowerName}!`, 'success');
+  showToast(`Book checked out to ${borrowerName}`, 'success');
   renderAll();
 }
 
@@ -396,25 +349,17 @@ function returnBook(trxId) {
   if (!tx || tx.status === 'Returned') return;
 
   const todayStr = new Date().toISOString().split('T')[0];
-
-  // Calculate overdue days
   const due = new Date(tx.dueDate);
-  const today = new Date(todayStr);
-  const diffTime = today - due;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  let overdueMessage = '';
-
+  const diffDays = Math.ceil((new Date(todayStr) - due) / (1000 * 60 * 60 * 24));
+  let penaltyNote = '';
   if (diffDays > 0) {
-    const finePerDay = 2000; // Rp 2000 per day
-    const fine = diffDays * finePerDay;
-    overdueMessage = `\n\n⚠️ NOTE: This return is ${diffDays} day(s) overdue!\nEstimated late fee: Rp ${fine.toLocaleString('id-ID')}`;
+    penaltyNote = `\n\n⚠️ OVERDUE: ${diffDays} day(s) late.\nAssessed late fee: Rp ${(diffDays * 2000).toLocaleString('id-ID')}`;
   }
 
-  if (confirm(`Confirm book return for transaction ${tx.id} from ${tx.borrowerName}?${overdueMessage}`)) {
+  if (confirm(`Confirm book check-in / return for ${tx.borrowerName}?${penaltyNote}`)) {
     tx.status = 'Returned';
     tx.returnDate = todayStr;
 
-    // Restore copy
     const book = books.find(b => b.id === tx.bookId);
     if (book) {
       book.availableCopies = Math.min(book.totalCopies, book.availableCopies + 1);
@@ -422,35 +367,43 @@ function returnBook(trxId) {
     }
 
     saveTransactions();
-    showToast('Book returned and restocked successfully!', 'success');
+    showToast('Book checked in and returned to shelf!', 'success');
     renderAll();
+    renderCirculation();
+  }
+}
+
+function deleteBook(id) {
+  const book = books.find(b => b.id === id);
+  if (!book) return;
+
+  if (transactions.some(t => t.bookId === id && t.status === 'Active')) {
+    alert('Cannot remove book while copies are currently out on loan!');
+    return;
+  }
+
+  if (confirm(`Remove "${book.title}" from library inventory?`)) {
+    books = books.filter(b => b.id !== id);
+    saveBooks();
+    renderAll();
+    showToast('Book removed from collection', 'info');
   }
 }
 
 function renderAll() {
-  updateStats();
-  renderBooks();
-  renderTransactions();
+  updateBadges();
+  renderBookshelf();
 }
 
-function updateStats() {
-  statTotalBooks.textContent = books.length;
-  const totalCopies = books.reduce((acc, b) => acc + b.totalCopies, 0);
-  statTotalCopies.textContent = totalCopies;
-
+function updateBadges() {
+  navTotalBooksBadge.textContent = books.length;
   const activeLoans = transactions.filter(t => t.status === 'Active');
-  statIssuedBooks.textContent = activeLoans.length;
-  transBadgeCount.textContent = activeLoans.length;
-
-  const today = new Date().toISOString().split('T')[0];
-  const overdueCount = activeLoans.filter(t => t.dueDate < today).length;
-  statOverdueBooks.textContent = overdueCount;
+  navLoansBadge.textContent = activeLoans.length;
+  loanBadgeCounter.textContent = activeLoans.length;
 }
 
-function renderBooks() {
+function renderBookshelf() {
   const query = searchBookInput.value.toLowerCase().trim();
-  const category = genreFilter.value;
-  const availability = availabilityFilter.value;
 
   const filtered = books.filter(b => {
     const matchesQuery = !query ||
@@ -458,151 +411,138 @@ function renderBooks() {
       b.author.toLowerCase().includes(query) ||
       b.isbn.toLowerCase().includes(query);
 
-    const matchesCat = !category || b.category === category;
-    const matchesAvail = !availability || 
-      (availability === 'Available' && b.availableCopies > 0) ||
-      (availability === 'Unavailable' && b.availableCopies === 0);
-
-    return matchesQuery && matchesCat && matchesAvail;
+    const matchesGenre = !selectedGenreFilter || b.category === selectedGenreFilter;
+    return matchesQuery && matchesGenre;
   });
 
-  booksTableBody.innerHTML = '';
+  bookCountBadge.textContent = `${filtered.length} Titles Listed`;
+
   if (filtered.length === 0) {
+    bookshelfGrid.innerHTML = '';
     booksEmptyState.classList.remove('hidden');
-    bookCountLabel.textContent = `Showing 0 of ${books.length} books`;
     return;
   }
 
   booksEmptyState.classList.add('hidden');
-  bookCountLabel.textContent = `Showing ${filtered.length} of ${books.length} books`;
+  bookshelfGrid.innerHTML = '';
 
   filtered.forEach(b => {
-    const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-50/80 transition-colors border-b border-slate-100';
+    const isAvail = b.availableCopies > 0;
+    const gradient = b.coverGradient || 'from-emerald-900 to-teal-950';
 
-    const isAvailable = b.availableCopies > 0;
-    const availBadge = isAvailable
-      ? '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">Available</span>'
-      : '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">Unavailable</span>';
+    const card = document.createElement('div');
+    card.className = 'bg-white rounded-2xl p-4 border border-[#e9e3da] shadow-2xs hover:shadow-md transition flex flex-col justify-between group';
 
-    tr.innerHTML = `
-      <td class="py-4 px-6">
-        <div class="font-bold text-slate-800 hover:text-emerald-700 transition">${escapeHtml(b.title)}</div>
-        <div class="text-xs text-slate-500 mt-0.5">by <span class="font-medium text-slate-700">${escapeHtml(b.author)}</span> • <span class="font-mono text-slate-400">${b.isbn}</span></div>
-      </td>
-      <td class="py-4 px-6">
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
-          ${escapeHtml(b.category)}
-        </span>
-      </td>
-      <td class="py-4 px-6 text-xs text-slate-600 font-mono">
-        ${escapeHtml(b.shelf || '-')}
-      </td>
-      <td class="py-4 px-6 text-center font-semibold">
-        <span class="${b.availableCopies > 0 ? 'text-emerald-600' : 'text-rose-600'}">${b.availableCopies}</span>
-        <span class="text-slate-400 font-normal"> / ${b.totalCopies}</span>
-      </td>
-      <td class="py-4 px-6 text-center">
-        ${availBadge}
-      </td>
-      <td class="py-4 px-6 text-right space-x-1.5 whitespace-nowrap">
-        ${isAvailable ? `
-          <button onclick="openIssueModal('${b.id}')" title="Issue Book" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition inline-flex items-center space-x-1">
-            <i class="fa-solid fa-arrow-up-from-bracket"></i>
-            <span>Issue</span>
+    card.innerHTML = `
+      <div>
+        <!-- Stylized Book Cover Preview -->
+        <div class="h-36 rounded-xl bg-gradient-to-tr ${gradient} p-4 text-white book-cover flex flex-col justify-between mb-3.5 relative overflow-hidden">
+          <div class="flex justify-between items-start">
+            <span class="text-[9px] font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded backdrop-blur">
+              ${escapeHtml(b.category)}
+            </span>
+            <span class="text-[10px] font-mono text-white/70">${b.year || ''}</span>
+          </div>
+          <div>
+            <h4 class="font-bold text-sm leading-snug line-clamp-2 text-amber-200">
+              ${escapeHtml(b.title)}
+            </h4>
+            <p class="text-[10px] text-white/80 mt-1 line-clamp-1">by ${escapeHtml(b.author)}</p>
+          </div>
+        </div>
+
+        <!-- Shelf Location & Availability -->
+        <div class="space-y-1.5 text-xs">
+          <div class="flex justify-between text-slate-500 text-[11px]">
+            <span>Shelf: <strong class="text-slate-800">${escapeHtml(b.shelf || 'Main')}</strong></span>
+            <span class="font-mono">${b.isbn}</span>
+          </div>
+
+          <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+            <span class="text-xs">
+              Available: <strong class="${isAvail ? 'text-emerald-700' : 'text-rose-600'}">${b.availableCopies}</strong> / ${b.totalCopies}
+            </span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${
+              isAvail ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+            }">
+              ${isAvail ? 'On Shelf' : 'All Borrowed'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Row -->
+      <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+        ${isAvail ? `
+          <button onclick="openIssueModal('${b.id}')" class="px-3 py-1.5 rounded-xl bg-[#1b2621] hover:bg-[#2c3d35] text-amber-300 font-semibold text-[11px] transition inline-flex items-center space-x-1.5 shadow-2xs">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span>Check Out</span>
           </button>
         ` : `
-          <button disabled class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-400 cursor-not-allowed inline-flex items-center space-x-1">
-            <i class="fa-solid fa-ban"></i>
-            <span>Full</span>
+          <button disabled class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-400 text-[11px] font-medium cursor-not-allowed">
+            <span>Unavailable</span>
           </button>
         `}
-        <button onclick="editBook('${b.id}')" title="Edit Book" class="w-8 h-8 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition inline-flex items-center justify-center">
-          <i class="fa-solid fa-pen-to-square"></i>
-        </button>
-        <button onclick="deleteBook('${b.id}')" title="Delete Book" class="w-8 h-8 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition inline-flex items-center justify-center">
-          <i class="fa-solid fa-trash"></i>
-        </button>
-      </td>
+        <div class="space-x-1">
+          <button onclick="editBook('${b.id}')" title="Edit Details" class="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-amber-600 inline-flex items-center justify-center">
+            <i class="fa-solid fa-pen text-xs"></i>
+          </button>
+          <button onclick="deleteBook('${b.id}')" title="Delete Volume" class="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-rose-600 inline-flex items-center justify-center">
+            <i class="fa-solid fa-trash text-xs"></i>
+          </button>
+        </div>
+      </div>
     `;
-    booksTableBody.appendChild(tr);
+    bookshelfGrid.appendChild(card);
   });
 }
 
-function renderTransactions() {
-  const query = searchTransInput.value.toLowerCase().trim();
-  const filter = transStatusFilter.value;
+function renderCirculation() {
+  const activeLoans = transactions.filter(t => t.status === 'Active');
   const today = new Date().toISOString().split('T')[0];
 
-  const filtered = transactions.filter(t => {
-    const matchesQuery = !query ||
-      t.borrowerName.toLowerCase().includes(query) ||
-      t.bookTitle.toLowerCase().includes(query) ||
-      t.borrowerId.toLowerCase().includes(query);
-
-    const isOverdue = t.status === 'Active' && t.dueDate < today;
-    let matchesStatus = true;
-    if (filter === 'Active') matchesStatus = t.status === 'Active' && !isOverdue;
-    if (filter === 'Returned') matchesStatus = t.status === 'Returned';
-    if (filter === 'Overdue') matchesStatus = isOverdue;
-
-    return matchesQuery && matchesStatus;
-  });
-
-  transTableBody.innerHTML = '';
-  if (filtered.length === 0) {
-    transEmptyState.classList.remove('hidden');
+  circLoansContainer.innerHTML = '';
+  if (activeLoans.length === 0) {
+    circLoansContainer.innerHTML = `
+      <div class="text-center py-16 text-slate-400 text-xs">
+        <i class="fa-solid fa-circle-check text-emerald-500 text-3xl mb-2"></i>
+        <p class="font-bold text-slate-700">All Volumes Checked In</p>
+        <p>No active borrowed books currently outstanding.</p>
+      </div>
+    `;
     return;
   }
 
-  transEmptyState.classList.add('hidden');
+  activeLoans.forEach(t => {
+    const isOverdue = t.dueDate < today;
+    const due = new Date(t.dueDate);
+    const diffDays = Math.ceil((new Date(today) - due) / (1000 * 60 * 60 * 24));
 
-  filtered.forEach(t => {
-    const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-50/80 transition-colors border-b border-slate-100';
+    const item = document.createElement('div');
+    item.className = 'p-4 rounded-xl border bg-[#faf8f5] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs';
 
-    const isOverdue = t.status === 'Active' && t.dueDate < today;
-    let statusBadge = '';
-    if (t.status === 'Returned') {
-      statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">Returned</span>';
-    } else if (isOverdue) {
-      statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-700 border border-rose-200">Overdue</span>';
-    } else {
-      statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">Borrowing</span>';
-    }
-
-    tr.innerHTML = `
-      <td class="py-4 px-6 font-mono text-xs font-semibold text-slate-700">
-        ${t.id}
-      </td>
-      <td class="py-4 px-6 font-medium text-slate-800">
-        ${escapeHtml(t.bookTitle)}
-      </td>
-      <td class="py-4 px-6">
-        <div class="font-medium text-slate-800">${escapeHtml(t.borrowerName)}</div>
-        <div class="text-xs text-slate-400 font-mono">${escapeHtml(t.borrowerId)}</div>
-      </td>
-      <td class="py-4 px-6 text-xs text-slate-600">
-        ${t.issueDate}
-      </td>
-      <td class="py-4 px-6 text-xs ${isOverdue ? 'font-bold text-rose-600' : 'text-slate-600'}">
-        ${t.dueDate}
-      </td>
-      <td class="py-4 px-6 text-center">
-        ${statusBadge}
-      </td>
-      <td class="py-4 px-6 text-right whitespace-nowrap">
-        ${t.status === 'Active' ? `
-          <button onclick="returnBook('${t.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition inline-flex items-center space-x-1">
-            <i class="fa-solid fa-rotate-left"></i>
-            <span>Process Return</span>
-          </button>
-        ` : `
-          <span class="text-xs text-slate-400"><i class="fa-solid fa-check text-emerald-500 mr-1"></i>Returned ${t.returnDate || ''}</span>
-        `}
-      </td>
+    item.innerHTML = `
+      <div>
+        <div class="flex items-center space-x-2">
+          <span class="font-bold text-slate-900">${escapeHtml(t.bookTitle)}</span>
+          ${isOverdue ? '<span class="px-2 py-0.5 rounded font-bold text-[10px] bg-rose-100 text-rose-800">OVERDUE</span>' : ''}
+        </div>
+        <p class="text-[11px] text-slate-500 mt-0.5">
+          Borrower: <strong class="text-slate-700">${escapeHtml(t.borrowerName)}</strong> (${t.borrowerId})
+        </p>
+        <div class="flex items-center space-x-3 text-[10px] text-slate-400 mt-1">
+          <span>Issued: ${t.issueDate}</span>
+          <span>•</span>
+          <span class="${isOverdue ? 'font-bold text-rose-600' : ''}">Due: ${t.dueDate}</span>
+          ${isOverdue ? `<span class="text-rose-600 font-bold">• Fine: Rp ${(diffDays * 2000).toLocaleString('id-ID')}</span>` : ''}
+        </div>
+      </div>
+      <button onclick="returnBook('${t.id}')" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition shrink-0 inline-flex items-center space-x-1 shadow-2xs">
+        <i class="fa-solid fa-arrow-down-to-bracket text-xs"></i>
+        <span>Check In / Return</span>
+      </button>
     `;
-    transTableBody.appendChild(tr);
+    circLoansContainer.appendChild(item);
   });
 }
 
@@ -611,57 +551,30 @@ function editBook(id) {
   if (b) openBookModal(b);
 }
 
-function exportLibraryReport() {
-  if (books.length === 0) {
-    showToast('No books to export!', 'error');
-    return;
-  }
-
-  const headers = ['Book ID', 'ISBN', 'Title', 'Author', 'Category', 'Shelf', 'Total Copies', 'Available Copies'];
-  const rows = books.map(b => [
-    b.id,
-    `"${b.isbn}"`,
-    `"${b.title}"`,
-    `"${b.author}"`,
-    `"${b.category}"`,
-    `"${b.shelf || ''}"`,
-    b.totalCopies,
-    b.availableCopies
-  ]);
-
-  const csvContent = 'data:text/csv;charset=utf-8,' + 
-    [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-
-  const encodedUri = encodeURI(csvContent);
+function exportCatalogCsv() {
+  if (books.length === 0) return;
+  const headers = ['ID', 'ISBN', 'Title', 'Author', 'Category', 'Shelf', 'Total Copies', 'Available Copies'];
+  const rows = books.map(b => [b.id, `"${b.isbn}"`, `"${b.title}"`, `"${b.author}"`, `"${b.category}"`, `"${b.shelf || ''}"`, b.totalCopies, b.availableCopies]);
+  const csv = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
   const link = document.createElement('a');
-  link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `Library_Catalog_Report_${new Date().toISOString().split('T')[0]}.csv`);
+  link.setAttribute('href', encodeURI(csv));
+  link.setAttribute('download', `LibroSync_Catalog_${new Date().toISOString().split('T')[0]}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-
-  showToast('Library Catalog CSV report exported successfully!', 'success');
+  showToast('Catalog CSV exported successfully', 'success');
 }
 
 function showToast(message, type = 'info') {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
-  
-  const icon = type === 'success' ? 'fa-circle-check text-emerald-500' : 
-               type === 'error' ? 'fa-triangle-exclamation text-rose-500' : 'fa-circle-info text-blue-500';
-  
-  toast.className = 'toast-enter pointer-events-auto bg-white border border-slate-200 shadow-xl px-4 py-3 rounded-xl flex items-center space-x-3 text-sm text-slate-700 min-w-[280px] max-w-sm';
-  toast.innerHTML = `
-    <i class="fa-solid ${icon} text-lg"></i>
-    <span class="flex-1 font-medium">${message}</span>
-  `;
-
+  toast.className = 'toast-enter pointer-events-auto bg-[#1b2621] text-white shadow-xl px-4 py-2.5 rounded-xl flex items-center space-x-2.5 text-xs min-w-[240px] border border-emerald-900';
+  toast.innerHTML = `<i class="fa-solid fa-circle-info text-amber-400"></i><span class="font-medium">${message}</span>`;
   container.appendChild(toast);
-
   setTimeout(() => {
-    toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
+    toast.classList.add('opacity-0', 'transition-opacity', 'duration-200');
+    setTimeout(() => toast.remove(), 200);
+  }, 3000);
 }
 
 function escapeHtml(string) {
@@ -674,6 +587,7 @@ function escapeHtml(string) {
     .replace(/'/g, '&#039;');
 }
 
+window.selectGenre = selectGenre;
 window.openIssueModal = openIssueModal;
 window.returnBook = returnBook;
 window.editBook = editBook;

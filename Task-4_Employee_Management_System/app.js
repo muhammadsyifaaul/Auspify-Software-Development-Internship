@@ -1,17 +1,10 @@
 /**
- * Task 4 - Employee Management System
- * Auspify Technologies Software Development Internship
- * Features:
- * - Employee Records Management (Add, Edit, View, Delete)
- * - Department Breakdown & Headcount / Budget allocation analytics
- * - Real-time Search and Multi-filter (Department, Employment Type, Status)
- * - Monthly Payroll Calculation & Summary
- * - CSV Payroll Export & LocalStorage persistence
+ * Task 4 - Employee Management System (StaffPulse HR)
+ * Archetype: Corporate HR Bento Directory & Org Hierarchy
  */
 
 const STORAGE_STAFF_KEY = 'auspify_staff_employees_v1';
 
-// Initial Mock Seed Employees
 const initialEmployees = [
   {
     id: 'EMP-001',
@@ -24,7 +17,8 @@ const initialEmployees = [
     salary: 7500,
     type: 'Full-Time',
     status: 'Active',
-    joinDate: '2023-01-15'
+    joinDate: '2023-01-15',
+    avatarBg: 'from-blue-600 to-indigo-700'
   },
   {
     id: 'EMP-002',
@@ -37,7 +31,8 @@ const initialEmployees = [
     salary: 6200,
     type: 'Full-Time',
     status: 'Active',
-    joinDate: '2023-06-01'
+    joinDate: '2023-06-01',
+    avatarBg: 'from-purple-600 to-pink-600'
   },
   {
     id: 'EMP-003',
@@ -50,7 +45,8 @@ const initialEmployees = [
     salary: 4800,
     type: 'Full-Time',
     status: 'Active',
-    joinDate: '2022-11-10'
+    joinDate: '2022-11-10',
+    avatarBg: 'from-emerald-600 to-teal-700'
   },
   {
     id: 'EMP-004',
@@ -63,7 +59,8 @@ const initialEmployees = [
     salary: 5100,
     type: 'Full-Time',
     status: 'On Leave',
-    joinDate: '2024-02-01'
+    joinDate: '2024-02-01',
+    avatarBg: 'from-amber-500 to-orange-600'
   },
   {
     id: 'EMP-005',
@@ -76,7 +73,8 @@ const initialEmployees = [
     salary: 4500,
     type: 'Full-Time',
     status: 'Active',
-    joinDate: '2023-09-15'
+    joinDate: '2023-09-15',
+    avatarBg: 'from-cyan-600 to-blue-700'
   },
   {
     id: 'EMP-006',
@@ -89,48 +87,43 @@ const initialEmployees = [
     salary: 1800,
     type: 'Internship',
     status: 'Active',
-    joinDate: '2026-09-01'
+    joinDate: '2026-09-01',
+    avatarBg: 'from-sky-500 to-indigo-600'
   }
 ];
 
 let employees = [];
+let selectedDepartment = '';
+let currentView = 'team'; // 'team', 'org', 'payroll'
 
-// DOM References
-const employeesSection = document.getElementById('employeesSection');
-const departmentsSection = document.getElementById('departmentsSection');
-const tabEmployeesBtn = document.getElementById('tabEmployeesBtn');
-const tabDepartmentsBtn = document.getElementById('tabDepartmentsBtn');
-const departmentCardsContainer = document.getElementById('departmentCardsContainer');
-
-// KPI Stats
-const statTotalEmployees = document.getElementById('statTotalEmployees');
-const statMonthlyPayroll = document.getElementById('statMonthlyPayroll');
-const statDepartmentCount = document.getElementById('statDepartmentCount');
-const statAvgSalary = document.getElementById('statAvgSalary');
-
-// Table & Filters
-const employeeTableBody = document.getElementById('employeeTableBody');
-const staffEmptyState = document.getElementById('staffEmptyState');
-const staffCountLabel = document.getElementById('staffCountLabel');
+// DOM Elements
+const secDirectory = document.getElementById('secDirectory');
+const secOrgChart = document.getElementById('secOrgChart');
+const secPayroll = document.getElementById('secPayroll');
+const employeeCardGrid = document.getElementById('employeeCardGrid');
+const emptyStaffState = document.getElementById('emptyStaffState');
 const searchStaffInput = document.getElementById('searchStaffInput');
-const departmentFilter = document.getElementById('departmentFilter');
-const employmentFilter = document.getElementById('employmentFilter');
-const resetStaffFilterBtn = document.getElementById('resetStaffFilterBtn');
-const exportStaffBtn = document.getElementById('exportStaffBtn');
+const typeFilter = document.getElementById('typeFilter');
+const currentDeptTitle = document.getElementById('currentDeptTitle');
+const currentDeptSubtitle = document.getElementById('currentDeptSubtitle');
+const sidebarCountBadge = document.getElementById('sidebarCountBadge');
+const sidebarPayrollTotal = document.getElementById('sidebarPayrollTotal');
+const orgTreeContainer = document.getElementById('orgTreeContainer');
+const deptBudgetGrid = document.getElementById('deptBudgetGrid');
 
-// Modal
+// Nav Buttons
+const viewTeamBtn = document.getElementById('viewTeamBtn');
+const viewOrgChartBtn = document.getElementById('viewOrgChartBtn');
+const viewPayrollBtn = document.getElementById('viewPayrollBtn');
+
+// Modal Elements
 const employeeModal = document.getElementById('employeeModal');
 const employeeForm = document.getElementById('employeeForm');
 const employeeModalTitle = document.getElementById('employeeModalTitle');
-const openAddStaffModalBtn = document.getElementById('openAddStaffModalBtn');
+const openRegisterModalBtn = document.getElementById('openRegisterModalBtn');
 const closeEmployeeModalBtn = document.getElementById('closeEmployeeModalBtn');
 const cancelEmployeeBtn = document.getElementById('cancelEmployeeBtn');
-
-// Profile Modal
-const viewEmployeeModal = document.getElementById('viewEmployeeModal');
-const viewEmpContent = document.getElementById('viewEmpContent');
-const closeViewEmpBtn = document.getElementById('closeViewEmpBtn');
-const closeViewEmpBtn2 = document.getElementById('closeViewEmpBtn2');
+const exportPayrollBtn = document.getElementById('exportPayrollBtn');
 
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
@@ -140,16 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function loadData() {
   const stored = localStorage.getItem(STORAGE_STAFF_KEY);
-  if (stored) {
-    try {
-      employees = JSON.parse(stored);
-    } catch (e) {
-      employees = [...initialEmployees];
-    }
-  } else {
-    employees = [...initialEmployees];
-    saveData();
-  }
+  employees = stored ? JSON.parse(stored) : [...initialEmployees];
+  if (!stored) saveData();
 }
 
 function saveData() {
@@ -157,57 +142,68 @@ function saveData() {
 }
 
 function setupEventListeners() {
-  // Tabs
-  tabEmployeesBtn.addEventListener('click', () => switchTab('employees'));
-  tabDepartmentsBtn.addEventListener('click', () => switchTab('departments'));
+  viewTeamBtn.addEventListener('click', () => switchView('team'));
+  viewOrgChartBtn.addEventListener('click', () => switchView('org'));
+  viewPayrollBtn.addEventListener('click', () => switchView('payroll'));
 
-  // Modals
-  openAddStaffModalBtn.addEventListener('click', () => openEmployeeModal());
+  searchStaffInput.addEventListener('input', renderDirectory);
+  typeFilter.addEventListener('change', renderDirectory);
+
+  openRegisterModalBtn.addEventListener('click', () => openEmployeeModal());
   closeEmployeeModalBtn.addEventListener('click', () => employeeModal.classList.add('hidden'));
   cancelEmployeeBtn.addEventListener('click', () => employeeModal.classList.add('hidden'));
   employeeForm.addEventListener('submit', handleEmployeeSubmit);
 
-  closeViewEmpBtn.addEventListener('click', () => viewEmployeeModal.classList.add('hidden'));
-  closeViewEmpBtn2.addEventListener('click', () => viewEmployeeModal.classList.add('hidden'));
-
-  // Search & Filters
-  searchStaffInput.addEventListener('input', renderEmployees);
-  departmentFilter.addEventListener('change', renderEmployees);
-  employmentFilter.addEventListener('change', renderEmployees);
-  resetStaffFilterBtn.addEventListener('click', () => {
-    searchStaffInput.value = '';
-    departmentFilter.value = '';
-    employmentFilter.value = '';
-    renderEmployees();
-  });
-
-  exportStaffBtn.addEventListener('click', exportStaffCsv);
-
-  window.addEventListener('click', (e) => {
-    if (e.target === employeeModal) employeeModal.classList.add('hidden');
-    if (e.target === viewEmployeeModal) viewEmployeeModal.classList.add('hidden');
-  });
+  exportPayrollBtn.addEventListener('click', exportStaffCsv);
 }
 
-function switchTab(tab) {
-  if (tab === 'employees') {
-    employeesSection.classList.remove('hidden');
-    departmentsSection.classList.add('hidden');
-    tabEmployeesBtn.className = 'py-3 px-1 border-b-2 border-sky-600 text-sky-700 flex items-center space-x-2 transition';
-    tabDepartmentsBtn.className = 'py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition';
-  } else {
-    employeesSection.classList.add('hidden');
-    departmentsSection.classList.remove('hidden');
-    tabDepartmentsBtn.className = 'py-3 px-1 border-b-2 border-sky-600 text-sky-700 flex items-center space-x-2 transition';
-    tabEmployeesBtn.className = 'py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition';
-    renderDepartments();
+function switchView(view) {
+  currentView = view;
+  secDirectory.classList.add('hidden');
+  secOrgChart.classList.add('hidden');
+  secPayroll.classList.add('hidden');
+
+  viewTeamBtn.className = 'w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-600 font-medium transition';
+  viewOrgChartBtn.className = 'w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-600 font-medium transition';
+  viewPayrollBtn.className = 'w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-600 font-medium transition';
+
+  if (view === 'team') {
+    secDirectory.classList.remove('hidden');
+    viewTeamBtn.className = 'w-full flex items-center justify-between px-3 py-2 rounded-xl bg-sky-50 text-sky-700 font-semibold transition';
+    renderDirectory();
+  } else if (view === 'org') {
+    secOrgChart.classList.remove('hidden');
+    viewOrgChartBtn.className = 'w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl bg-sky-50 text-sky-700 font-semibold transition';
+    renderOrgChart();
+  } else if (view === 'payroll') {
+    secPayroll.classList.remove('hidden');
+    viewPayrollBtn.className = 'w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl bg-sky-50 text-sky-700 font-semibold transition';
+    renderDeptBudgets();
   }
+}
+
+function filterByDept(dept) {
+  selectedDepartment = dept;
+  document.querySelectorAll('.dept-nav-btn').forEach(btn => {
+    btn.classList.remove('font-medium', 'text-slate-800', 'bg-slate-100');
+    btn.classList.add('text-slate-600');
+  });
+
+  if (dept) {
+    currentDeptTitle.textContent = `${dept} Team`;
+    currentDeptSubtitle.textContent = `Active personnel allocated to ${dept}`;
+  } else {
+    currentDeptTitle.textContent = 'Workforce Directory';
+    currentDeptSubtitle.textContent = 'Showing all registered corporate personnel and team designations';
+  }
+
+  switchView('team');
 }
 
 function openEmployeeModal(emp = null) {
   employeeForm.reset();
   if (emp) {
-    employeeModalTitle.textContent = 'Edit Employee Record';
+    employeeModalTitle.textContent = 'Edit Employee Profile';
     document.getElementById('employeeIdHidden').value = emp.id;
     document.getElementById('employeeCode').value = emp.code;
     document.getElementById('employeeName').value = emp.name;
@@ -242,23 +238,14 @@ function handleEmployeeSubmit(e) {
   const joinDate = document.getElementById('employeeJoinDate').value;
   const status = document.getElementById('employeeStatus').value;
 
+  const bgs = ['from-blue-600 to-indigo-700', 'from-purple-600 to-pink-600', 'from-emerald-600 to-teal-700', 'from-amber-500 to-orange-600'];
+  const avatarBg = bgs[Math.floor(Math.random() * bgs.length)];
+
   if (idHidden) {
-    const idx = employees.findIndex(e => e.id === idHidden);
+    const idx = employees.findIndex(item => item.id === idHidden);
     if (idx !== -1) {
-      employees[idx] = {
-        ...employees[idx],
-        code,
-        name,
-        email,
-        phone,
-        department,
-        role,
-        salary,
-        type,
-        joinDate,
-        status
-      };
-      showToast('Employee information updated successfully!', 'success');
+      employees[idx] = { ...employees[idx], code, name, email, phone, department, role, salary, type, joinDate, status };
+      showToast('Employee profile updated', 'success');
     }
   } else {
     const newEmp = {
@@ -272,10 +259,11 @@ function handleEmployeeSubmit(e) {
       salary,
       type,
       joinDate,
-      status
+      status,
+      avatarBg
     };
     employees.unshift(newEmp);
-    showToast('New employee registered successfully!', 'success');
+    showToast('Employee registered successfully', 'success');
   }
 
   saveData();
@@ -287,7 +275,7 @@ function deleteEmployee(id) {
   const emp = employees.find(e => e.id === id);
   if (!emp) return;
 
-  if (confirm(`Are you sure you want to delete employee record for ${emp.name} (${emp.code})?`)) {
+  if (confirm(`Remove ${emp.name} (${emp.code}) from organization registry?`)) {
     employees = employees.filter(e => e.id !== id);
     saveData();
     renderAll();
@@ -295,86 +283,19 @@ function deleteEmployee(id) {
   }
 }
 
-function viewEmployee(id) {
-  const emp = employees.find(e => e.id === id);
-  if (!emp) return;
-
-  const initials = emp.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-
-  viewEmpContent.innerHTML = `
-    <div class="w-20 h-20 rounded-full bg-sky-100 text-sky-800 mx-auto flex items-center justify-center font-bold text-2xl mb-3 border-2 border-sky-500 shadow-sm">
-      ${initials}
-    </div>
-    <h4 class="text-xl font-bold text-slate-800">${escapeHtml(emp.name)}</h4>
-    <p class="text-xs text-sky-600 font-semibold">${escapeHtml(emp.role)}</p>
-    <p class="text-xs text-slate-400 font-mono mt-0.5">${emp.code} • ${emp.department}</p>
-
-    <div class="mt-3 flex justify-center space-x-2">
-      <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusBadgeClass(emp.status)}">${emp.status}</span>
-      <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">${emp.type}</span>
-    </div>
-
-    <div class="mt-6 bg-slate-50 p-4 rounded-xl border border-slate-100 text-left space-y-2 text-xs text-slate-600">
-      <div class="flex justify-between">
-        <span class="text-slate-400">Monthly Compensation:</span>
-        <span class="font-bold text-emerald-600">$${emp.salary.toLocaleString('en-US')} / month</span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-slate-400">Email:</span>
-        <span class="font-medium text-slate-700">${escapeHtml(emp.email)}</span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-slate-400">Phone:</span>
-        <span class="font-medium text-slate-700">${escapeHtml(emp.phone || 'N/A')}</span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-slate-400">Date Joined:</span>
-        <span class="font-medium text-slate-700">${emp.joinDate || 'N/A'}</span>
-      </div>
-    </div>
-  `;
-
-  viewEmployeeModal.classList.remove('hidden');
-}
-
-function getStatusBadgeClass(status) {
-  switch (status) {
-    case 'Active':
-      return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
-    case 'On Leave':
-      return 'bg-amber-100 text-amber-800 border border-amber-200';
-    case 'Probation':
-      return 'bg-sky-100 text-sky-800 border border-sky-200';
-    case 'Terminated':
-      return 'bg-rose-100 text-rose-800 border border-rose-200';
-    default:
-      return 'bg-slate-100 text-slate-800';
-  }
-}
-
 function renderAll() {
-  updateStats();
-  renderEmployees();
-  renderDepartments();
-}
-
-function updateStats() {
-  statTotalEmployees.textContent = employees.length;
-
+  sidebarCountBadge.textContent = employees.length;
   const totalPayroll = employees.reduce((acc, e) => acc + (Number(e.salary) || 0), 0);
-  statMonthlyPayroll.textContent = '$' + totalPayroll.toLocaleString('en-US');
+  sidebarPayrollTotal.textContent = '$' + totalPayroll.toLocaleString('en-US');
 
-  const depts = new Set(employees.map(e => e.department));
-  statDepartmentCount.textContent = depts.size;
-
-  const avgSalary = employees.length ? (totalPayroll / employees.length) : 0;
-  statAvgSalary.textContent = '$' + Math.round(avgSalary).toLocaleString('en-US');
+  if (currentView === 'team') renderDirectory();
+  else if (currentView === 'org') renderOrgChart();
+  else if (currentView === 'payroll') renderDeptBudgets();
 }
 
-function renderEmployees() {
+function renderDirectory() {
   const query = searchStaffInput.value.toLowerCase().trim();
-  const dept = departmentFilter.value;
-  const empType = employmentFilter.value;
+  const type = typeFilter.value;
 
   const filtered = employees.filter(e => {
     const matchesQuery = !query ||
@@ -383,116 +304,157 @@ function renderEmployees() {
       e.role.toLowerCase().includes(query) ||
       e.email.toLowerCase().includes(query);
 
-    const matchesDept = !dept || e.department === dept;
-    const matchesType = !empType || e.type === empType;
+    const matchesDept = !selectedDepartment || e.department === selectedDepartment;
+    const matchesType = !type || e.type === type;
 
     return matchesQuery && matchesDept && matchesType;
   });
 
-  employeeTableBody.innerHTML = '';
+  employeeCardGrid.innerHTML = '';
   if (filtered.length === 0) {
-    staffEmptyState.classList.remove('hidden');
-    staffCountLabel.textContent = `Showing 0 of ${employees.length} employees`;
+    emptyStaffState.classList.remove('hidden');
     return;
   }
-
-  staffEmptyState.classList.add('hidden');
-  staffCountLabel.textContent = `Showing ${filtered.length} of ${employees.length} employees`;
+  emptyStaffState.classList.add('hidden');
 
   filtered.forEach(e => {
-    const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-50/80 transition-colors border-b border-slate-100';
-
     const initials = e.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    const bg = e.avatarBg || 'from-sky-600 to-blue-700';
 
-    tr.innerHTML = `
-      <td class="py-4 px-6">
-        <div class="flex items-center space-x-3">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-600 to-blue-700 text-white font-bold text-xs flex items-center justify-center shadow-sm">
-            ${initials}
-          </div>
-          <div>
-            <div class="font-bold text-slate-800 cursor-pointer hover:text-sky-600 transition" onclick="viewEmployee('${e.id}')">
-              ${escapeHtml(e.name)}
+    const card = document.createElement('div');
+    card.className = 'bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs hover:shadow-md transition flex flex-col justify-between group';
+
+    card.innerHTML = `
+      <div>
+        <div class="flex items-start justify-between">
+          <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr ${bg} text-white font-bold flex items-center justify-center text-sm shadow-xs">
+              ${initials}
             </div>
-            <div class="text-xs text-slate-400 font-mono">${escapeHtml(e.code)} • ${escapeHtml(e.email)}</div>
+            <div>
+              <h4 class="font-bold text-slate-900 text-sm">${escapeHtml(e.name)}</h4>
+              <p class="text-xs font-semibold text-sky-600">${escapeHtml(e.role)}</p>
+              <p class="text-[10px] text-slate-400 font-mono mt-0.5">${e.code} • ${e.department}</p>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${
+            e.status === 'Active' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+          }">
+            ${e.status}
+          </span>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-slate-50 p-2.5 rounded-xl">
+            <span class="text-slate-400 text-[10px] block">COMPENSATION</span>
+            <span class="font-bold text-slate-800 text-xs">$${e.salary.toLocaleString('en-US')} / mo</span>
+          </div>
+          <div class="bg-slate-50 p-2.5 rounded-xl">
+            <span class="text-slate-400 text-[10px] block">EMPLOYMENT</span>
+            <span class="font-medium text-slate-700 text-xs">${e.type}</span>
           </div>
         </div>
-      </td>
-      <td class="py-4 px-6">
-        <div class="font-semibold text-slate-700">${escapeHtml(e.role)}</div>
-        <div class="text-xs text-slate-500">${escapeHtml(e.department)}</div>
-      </td>
-      <td class="py-4 px-6 text-center">
-        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
-          ${e.type}
-        </span>
-      </td>
-      <td class="py-4 px-6 text-right font-bold text-slate-700">
-        $${e.salary.toLocaleString('en-US')}
-      </td>
-      <td class="py-4 px-6 text-center text-xs text-slate-500">
-        ${e.joinDate || '-'}
-      </td>
-      <td class="py-4 px-6 text-center">
-        <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(e.status)}">
-          ${e.status}
-        </span>
-      </td>
-      <td class="py-4 px-6 text-right space-x-1.5 whitespace-nowrap">
-        <button onclick="viewEmployee('${e.id}')" title="View Profile" class="w-8 h-8 rounded-lg text-slate-500 hover:text-sky-600 hover:bg-sky-50 transition inline-flex items-center justify-center">
-          <i class="fa-solid fa-eye"></i>
+
+        <div class="mt-3 space-y-1 text-[11px] text-slate-500">
+          <div class="flex items-center space-x-2">
+            <i class="fa-regular fa-envelope text-slate-400 w-3.5"></i>
+            <span class="truncate">${escapeHtml(e.email)}</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-phone text-slate-400 w-3.5"></i>
+            <span>${escapeHtml(e.phone || 'N/A')}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end space-x-1.5 text-xs">
+        <button onclick="editEmployee('${e.id}')" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition text-[11px]">
+          <i class="fa-solid fa-pen mr-1"></i> Edit
         </button>
-        <button onclick="editEmployee('${e.id}')" title="Edit Employee" class="w-8 h-8 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition inline-flex items-center justify-center">
-          <i class="fa-solid fa-pen-to-square"></i>
+        <button onclick="deleteEmployee('${e.id}')" class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 font-medium transition text-[11px]">
+          <i class="fa-solid fa-trash mr-1"></i> Remove
         </button>
-        <button onclick="deleteEmployee('${e.id}')" title="Delete Employee" class="w-8 h-8 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition inline-flex items-center justify-center">
-          <i class="fa-solid fa-trash"></i>
-        </button>
-      </td>
+      </div>
     `;
-    employeeTableBody.appendChild(tr);
+    employeeCardGrid.appendChild(card);
   });
 }
 
-function renderDepartments() {
+function renderOrgChart() {
   const depts = ['Engineering', 'Product & Design', 'Human Resources', 'Marketing & Sales', 'Finance & Accounting'];
-  departmentCardsContainer.innerHTML = '';
+
+  orgTreeContainer.innerHTML = `
+    <!-- Executive Node -->
+    <div class="text-center mb-8">
+      <div class="inline-block p-4 rounded-2xl bg-gradient-to-r from-slate-900 to-sky-950 text-white shadow-md text-xs">
+        <span class="text-[10px] font-mono text-sky-300 block uppercase">Chief Executive</span>
+        <h3 class="font-bold text-sm mt-0.5">Auspify Executive Leadership</h3>
+        <p class="text-[11px] text-slate-300 mt-1">${employees.length} Total Team Members</p>
+      </div>
+      <div class="w-px h-8 bg-slate-300 mx-auto"></div>
+    </div>
+
+    <!-- Department Branches Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      ${depts.map(d => {
+        const team = employees.filter(e => e.department === d);
+        return `
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+              <span class="font-bold text-slate-800">${d}</span>
+              <span class="text-[10px] bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded-full">${team.length} members</span>
+            </div>
+            <div class="space-y-2">
+              ${team.length ? team.map(m => `
+                <div class="bg-white p-2.5 rounded-lg border border-slate-100 flex items-center justify-between">
+                  <div>
+                    <h5 class="font-bold text-slate-900">${escapeHtml(m.name)}</h5>
+                    <p class="text-[10px] text-slate-500">${escapeHtml(m.role)}</p>
+                  </div>
+                  <span class="text-[10px] font-mono text-slate-400">${m.type}</span>
+                </div>
+              `).join('') : '<p class="text-slate-400 text-[11px]">No active staff assigned.</p>'}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderDeptBudgets() {
+  const depts = ['Engineering', 'Product & Design', 'Human Resources', 'Marketing & Sales', 'Finance & Accounting'];
+  deptBudgetGrid.innerHTML = '';
 
   depts.forEach(d => {
-    const staffInDept = employees.filter(e => e.department === d);
-    const count = staffInDept.length;
-    const deptBudget = staffInDept.reduce((acc, e) => acc + (Number(e.salary) || 0), 0);
-    const activeStaff = staffInDept.filter(e => e.status === 'Active').length;
+    const team = employees.filter(e => e.department === d);
+    const totalSalary = team.reduce((acc, curr) => acc + (Number(curr.salary) || 0), 0);
+    const avgSalary = team.length ? Math.round(totalSalary / team.length) : 0;
 
     const card = document.createElement('div');
-    card.className = 'bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition flex flex-col justify-between';
-    card.innerHTML = `
-      <div>
-        <div class="flex items-center justify-between mb-3">
-          <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg">
-            <i class="fa-solid fa-briefcase"></i>
-          </div>
-          <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
-            ${count} Members
-          </span>
-        </div>
-        <h4 class="text-base font-bold text-slate-800">${d}</h4>
-        <p class="text-xs text-slate-400 mt-1">Operational Division</p>
-      </div>
+    card.className = 'bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs space-y-4';
 
-      <div class="mt-6 pt-4 border-t border-slate-100 space-y-2 text-xs">
-        <div class="flex justify-between">
-          <span class="text-slate-500">Active Staff:</span>
-          <span class="font-semibold text-emerald-600">${activeStaff} / ${count}</span>
+    card.innerHTML = `
+      <div class="flex items-center justify-between">
+        <h4 class="font-bold text-slate-800 text-sm">${d}</h4>
+        <span class="text-xs bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full font-semibold">${team.length} Staff</span>
+      </div>
+      <div class="space-y-2 text-xs">
+        <div class="flex justify-between text-slate-500">
+          <span>Monthly Payroll Allocation:</span>
+          <strong class="text-slate-900">$${totalSalary.toLocaleString('en-US')}</strong>
         </div>
-        <div class="flex justify-between">
-          <span class="text-slate-500">Monthly Payroll:</span>
-          <span class="font-bold text-slate-800">$${deptBudget.toLocaleString('en-US')}</span>
+        <div class="flex justify-between text-slate-500">
+          <span>Average Compensation:</span>
+          <span class="font-medium text-slate-700">$${avgSalary.toLocaleString('en-US')}</span>
         </div>
+      </div>
+      <div class="pt-3 border-t border-slate-100 flex justify-between items-center text-[11px]">
+        <span class="text-emerald-600 font-semibold">Active & Funded</span>
+        <button onclick="filterByDept('${d}')" class="text-sky-600 hover:underline font-semibold">View Staff →</button>
       </div>
     `;
-    departmentCardsContainer.appendChild(card);
+    deptBudgetGrid.appendChild(card);
   });
 }
 
@@ -502,59 +464,29 @@ function editEmployee(id) {
 }
 
 function exportStaffCsv() {
-  if (employees.length === 0) {
-    showToast('No employees to export!', 'error');
-    return;
-  }
-
-  const headers = ['ID', 'Code', 'Full Name', 'Email', 'Phone', 'Department', 'Job Role', 'Monthly Salary ($)', 'Employment Type', 'Status', 'Date Joined'];
-  const rows = employees.map(e => [
-    e.id,
-    `"${e.code}"`,
-    `"${e.name}"`,
-    `"${e.email}"`,
-    `"${e.phone || ''}"`,
-    `"${e.department}"`,
-    `"${e.role}"`,
-    e.salary,
-    `"${e.type}"`,
-    `"${e.status}"`,
-    `"${e.joinDate || ''}"`
-  ]);
-
-  const csvContent = 'data:text/csv;charset=utf-8,' + 
-    [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-
-  const encodedUri = encodeURI(csvContent);
+  if (employees.length === 0) return;
+  const headers = ['ID', 'Code', 'Name', 'Email', 'Phone', 'Department', 'Role', 'Salary', 'Type', 'Status'];
+  const rows = employees.map(e => [e.id, `"${e.code}"`, `"${e.name}"`, `"${e.email}"`, `"${e.phone || ''}"`, `"${e.department}"`, `"${e.role}"`, e.salary, `"${e.type}"`, `"${e.status}"`]);
+  const csv = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
   const link = document.createElement('a');
-  link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `Staff_Payroll_Report_${new Date().toISOString().split('T')[0]}.csv`);
+  link.setAttribute('href', encodeURI(csv));
+  link.setAttribute('download', `StaffPulse_Workforce_${new Date().toISOString().split('T')[0]}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-
-  showToast('Staff Payroll CSV exported successfully!', 'success');
+  showToast('Staff workforce report exported', 'success');
 }
 
 function showToast(message, type = 'info') {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
-  
-  const icon = type === 'success' ? 'fa-circle-check text-emerald-500' : 
-               type === 'error' ? 'fa-triangle-exclamation text-rose-500' : 'fa-circle-info text-sky-500';
-  
-  toast.className = 'toast-enter pointer-events-auto bg-white border border-slate-200 shadow-xl px-4 py-3 rounded-xl flex items-center space-x-3 text-sm text-slate-700 min-w-[280px] max-w-sm';
-  toast.innerHTML = `
-    <i class="fa-solid ${icon} text-lg"></i>
-    <span class="flex-1 font-medium">${message}</span>
-  `;
-
+  toast.className = 'toast-enter pointer-events-auto bg-slate-900 text-white shadow-xl px-4 py-2.5 rounded-xl flex items-center space-x-2.5 text-xs min-w-[240px] border border-slate-700';
+  toast.innerHTML = `<i class="fa-solid fa-circle-check text-sky-400"></i><span class="font-medium">${message}</span>`;
   container.appendChild(toast);
-
   setTimeout(() => {
-    toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
+    toast.classList.add('opacity-0', 'transition-opacity', 'duration-200');
+    setTimeout(() => toast.remove(), 200);
+  }, 2500);
 }
 
 function escapeHtml(string) {
@@ -567,6 +499,7 @@ function escapeHtml(string) {
     .replace(/'/g, '&#039;');
 }
 
-window.viewEmployee = viewEmployee;
+window.filterByDept = filterByDept;
+window.switchView = switchView;
 window.editEmployee = editEmployee;
 window.deleteEmployee = deleteEmployee;

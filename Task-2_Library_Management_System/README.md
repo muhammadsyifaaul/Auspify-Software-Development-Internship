@@ -1,11 +1,11 @@
 # Task 2: Library Management System (LibroSync Hub)
 
-## 📌 Overview
+##  Overview
 LibroSync Hub is a comprehensive web-based Library Management System developed for the **Auspify Technologies Software Development Internship**. It streamlines book cataloging, stock availability, member checkout/issue flows, return handling, overdue detection, and late fee tracking.
 
 ---
 
-## 🚀 Features Implemented
+##  Features Implemented
 - **Book Catalog Management**:
   - Add, edit, and delete books with fields: Title, Author, ISBN, Category, Shelf Location, Total Copies, and Published Year.
   - Automatically calculates and updates available copies based on active loans.
@@ -28,7 +28,7 @@ LibroSync Hub is a comprehensive web-based Library Management System developed f
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 - **HTML5 & Semantic Structure**
 - **Tailwind CSS** for responsive styling
 - **JavaScript (ES6+)**
@@ -36,6 +36,6 @@ LibroSync Hub is a comprehensive web-based Library Management System developed f
 
 ---
 
-## 💻 How to Run
+##  How to Run
 1. Navigate to `Task-2_Library_Management_System`.
 2. Double click `index.html` or open in any modern browser.

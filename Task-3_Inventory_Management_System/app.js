@@ -1,19 +1,11 @@
 /**
- * Task 3 - Inventory Management System
- * Auspify Technologies Software Development Internship
- * Features:
- * - Inventory Items Catalog (SKU, Product, Category, Price, Stock, Reorder Level)
- * - Stock In (Restock) & Stock Out (Dispatch) operations with automatic balance recalculation
- * - Audit Trail / Movement Log
- * - Real-time Search & Filter by Category & Stock Status
- * - Automated Low Stock & Out of Stock Alerts
- * - Comprehensive Inventory Valuation & CSV Export
+ * Task 3 - Inventory Management System (StockMaster Pro)
+ * Archetype: Industrial Warehouse Cockpit & Telemetry Operations Feed
  */
 
 const STORAGE_INVENTORY_KEY = 'auspify_inventory_products_v1';
 const STORAGE_MOVEMENTS_KEY = 'auspify_inventory_movements_v1';
 
-// Initial Mock Inventory Products
 const initialProducts = [
   {
     id: 'PRD-001',
@@ -67,14 +59,13 @@ const initialProducts = [
   }
 ];
 
-// Initial Movement Log
 const initialMovements = [
   {
     id: 'MOV-101',
     timestamp: '2026-11-20 09:30',
     type: 'IN',
     productId: 'PRD-001',
-    productName: 'Logitech MX Master 3S Wireless Performance Mouse',
+    productName: 'Logitech MX Master 3S',
     quantity: 20,
     balance: 18,
     note: 'Initial batch purchase invoice #INV-492'
@@ -84,10 +75,10 @@ const initialMovements = [
     timestamp: '2026-11-22 14:15',
     type: 'OUT',
     productId: 'PRD-001',
-    productName: 'Logitech MX Master 3S Wireless Performance Mouse',
+    productName: 'Logitech MX Master 3S',
     quantity: 2,
     balance: 18,
-    note: 'Office developer setup deployment'
+    note: 'Developer workstation setup'
   }
 ];
 
@@ -95,49 +86,37 @@ let products = [];
 let movements = [];
 
 // DOM References
-const inventorySection = document.getElementById('inventorySection');
-const movementLogSection = document.getElementById('movementLogSection');
-const tabInventoryBtn = document.getElementById('tabInventoryBtn');
-const tabStockLogBtn = document.getElementById('tabStockLogBtn');
-
-// KPI Stats
-const statTotalItems = document.getElementById('statTotalItems');
-const statTotalValue = document.getElementById('statTotalValue');
-const statLowStock = document.getElementById('statLowStock');
-const statOutOfStock = document.getElementById('statOutOfStock');
-
-// Table & Filters
-const inventoryTableBody = document.getElementById('inventoryTableBody');
-const inventoryEmptyState = document.getElementById('inventoryEmptyState');
-const inventoryCountLabel = document.getElementById('inventoryCountLabel');
-const searchInventoryInput = document.getElementById('searchInventoryInput');
+const productGrid = document.getElementById('productGrid');
+const terminalContainer = document.getElementById('terminalContainer');
+const emptyState = document.getElementById('emptyState');
+const searchInput = document.getElementById('searchInput');
 const categoryFilter = document.getElementById('categoryFilter');
-const stockStatusFilter = document.getElementById('stockStatusFilter');
-const resetInventoryFilterBtn = document.getElementById('resetInventoryFilterBtn');
-const exportInventoryBtn = document.getElementById('exportInventoryBtn');
+const stockFilter = document.getElementById('stockFilter');
 
-// Movement Log
-const movementTableBody = document.getElementById('movementTableBody');
-const logEmptyState = document.getElementById('logEmptyState');
-const clearLogBtn = document.getElementById('clearLogBtn');
+// HUD
+const hudValuation = document.getElementById('hudValuation');
+const hudSkus = document.getElementById('hudSkus');
+const hudLowStock = document.getElementById('hudLowStock');
 
-// Product Modal
-const productModal = document.getElementById('productModal');
-const productForm = document.getElementById('productForm');
-const productModalTitle = document.getElementById('productModalTitle');
-const openAddProductModalBtn = document.getElementById('openAddProductModalBtn');
-const closeProductModalBtn = document.getElementById('closeProductModalBtn');
-const cancelProductBtn = document.getElementById('cancelProductBtn');
-
-// Adjust Modal
+// Modals
 const adjustModal = document.getElementById('adjustModal');
 const adjustForm = document.getElementById('adjustForm');
-const adjustModalHeader = document.getElementById('adjustModalHeader');
 const adjustModalTitle = document.getElementById('adjustModalTitle');
-const adjustProductName = document.getElementById('adjustProductName');
+const adjustProdName = document.getElementById('adjustProdName');
+const adjustHeader = document.getElementById('adjustHeader');
 const confirmAdjustBtn = document.getElementById('confirmAdjustBtn');
-const closeAdjustModalBtn = document.getElementById('closeAdjustModalBtn');
+const closeAdjustBtn = document.getElementById('closeAdjustBtn');
 const cancelAdjustBtn = document.getElementById('cancelAdjustBtn');
+
+const skuModal = document.getElementById('skuModal');
+const skuForm = document.getElementById('skuForm');
+const skuModalTitle = document.getElementById('skuModalTitle');
+const openAddProductBtn = document.getElementById('openAddProductBtn');
+const closeSkuBtn = document.getElementById('closeSkuBtn');
+const cancelSkuBtn = document.getElementById('cancelSkuBtn');
+
+const clearLogBtn = document.getElementById('clearLogBtn');
+const exportCsvBtn = document.getElementById('exportCsvBtn');
 
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
@@ -146,29 +125,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function loadData() {
-  const storedProd = localStorage.getItem(STORAGE_INVENTORY_KEY);
-  if (storedProd) {
-    try {
-      products = JSON.parse(storedProd);
-    } catch (e) {
-      products = [...initialProducts];
-    }
-  } else {
-    products = [...initialProducts];
-    saveProducts();
-  }
+  const p = localStorage.getItem(STORAGE_INVENTORY_KEY);
+  products = p ? JSON.parse(p) : [...initialProducts];
+  if (!p) saveProducts();
 
-  const storedMov = localStorage.getItem(STORAGE_MOVEMENTS_KEY);
-  if (storedMov) {
-    try {
-      movements = JSON.parse(storedMov);
-    } catch (e) {
-      movements = [...initialMovements];
-    }
-  } else {
-    movements = [...initialMovements];
-    saveMovements();
-  }
+  const m = localStorage.getItem(STORAGE_MOVEMENTS_KEY);
+  movements = m ? JSON.parse(m) : [...initialMovements];
+  if (!m) saveMovements();
 }
 
 function saveProducts() {
@@ -180,111 +143,67 @@ function saveMovements() {
 }
 
 function setupEventListeners() {
-  // Tabs
-  tabInventoryBtn.addEventListener('click', () => switchTab('inventory'));
-  tabStockLogBtn.addEventListener('click', () => switchTab('log'));
+  searchInput.addEventListener('input', renderProducts);
+  categoryFilter.addEventListener('change', renderProducts);
+  stockFilter.addEventListener('change', renderProducts);
 
-  // Product Modal
-  openAddProductModalBtn.addEventListener('click', () => openProductModal());
-  closeProductModalBtn.addEventListener('click', () => productModal.classList.add('hidden'));
-  cancelProductBtn.addEventListener('click', () => productModal.classList.add('hidden'));
-  productForm.addEventListener('submit', handleProductSubmit);
+  openAddProductBtn.addEventListener('click', () => openSkuModal());
+  closeSkuBtn.addEventListener('click', () => skuModal.classList.add('hidden'));
+  cancelSkuBtn.addEventListener('click', () => skuModal.classList.add('hidden'));
+  skuForm.addEventListener('submit', handleSkuSubmit);
 
-  // Adjust Modal
-  closeAdjustModalBtn.addEventListener('click', () => adjustModal.classList.add('hidden'));
+  closeAdjustBtn.addEventListener('click', () => adjustModal.classList.add('hidden'));
   cancelAdjustBtn.addEventListener('click', () => adjustModal.classList.add('hidden'));
   adjustForm.addEventListener('submit', handleAdjustSubmit);
 
-  // Search & Filter
-  searchInventoryInput.addEventListener('input', renderProducts);
-  categoryFilter.addEventListener('change', renderProducts);
-  stockStatusFilter.addEventListener('change', renderProducts);
-  resetInventoryFilterBtn.addEventListener('click', () => {
-    searchInventoryInput.value = '';
-    categoryFilter.value = '';
-    stockStatusFilter.value = '';
-    renderProducts();
-  });
-
-  // Actions
-  exportInventoryBtn.addEventListener('click', exportInventoryCsv);
   clearLogBtn.addEventListener('click', () => {
-    if (confirm('Are you sure you want to clear all movement logs?')) {
-      movements = [];
-      saveMovements();
-      renderMovements();
-      showToast('Movement logs cleared', 'info');
-    }
+    movements = [];
+    saveMovements();
+    renderTerminal();
   });
 
-  window.addEventListener('click', (e) => {
-    if (e.target === productModal) productModal.classList.add('hidden');
-    if (e.target === adjustModal) adjustModal.classList.add('hidden');
-  });
+  exportCsvBtn.addEventListener('click', exportInventoryCsv);
 }
 
-function switchTab(tab) {
-  if (tab === 'inventory') {
-    inventorySection.classList.remove('hidden');
-    movementLogSection.classList.add('hidden');
-    tabInventoryBtn.className = 'py-3 px-1 border-b-2 border-purple-600 text-purple-700 flex items-center space-x-2 transition';
-    tabStockLogBtn.className = 'py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition';
-  } else {
-    inventorySection.classList.add('hidden');
-    movementLogSection.classList.remove('hidden');
-    tabStockLogBtn.className = 'py-3 px-1 border-b-2 border-purple-600 text-purple-700 flex items-center space-x-2 transition';
-    tabInventoryBtn.className = 'py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition';
-  }
-}
-
-function openProductModal(prod = null) {
-  productForm.reset();
+function openSkuModal(prod = null) {
+  skuForm.reset();
   if (prod) {
-    productModalTitle.textContent = 'Edit Product Details';
-    document.getElementById('productIdHidden').value = prod.id;
-    document.getElementById('productSku').value = prod.sku;
-    document.getElementById('productName').value = prod.name;
-    document.getElementById('productCategory').value = prod.category;
-    document.getElementById('productPrice').value = prod.price;
-    document.getElementById('productQuantity').value = prod.quantity;
-    document.getElementById('productReorderLevel').value = prod.reorderLevel;
-    document.getElementById('productSupplier').value = prod.supplier || '';
+    skuModalTitle.textContent = 'UPDATE SKU RECORD';
+    document.getElementById('skuHiddenId').value = prod.id;
+    document.getElementById('skuCode').value = prod.sku;
+    document.getElementById('skuName').value = prod.name;
+    document.getElementById('skuCategory').value = prod.category;
+    document.getElementById('skuPrice').value = prod.price;
+    document.getElementById('skuQty').value = prod.quantity;
+    document.getElementById('skuThreshold').value = prod.reorderLevel;
+    document.getElementById('skuSupplier').value = prod.supplier || '';
   } else {
-    productModalTitle.textContent = 'Add Product to Inventory';
-    document.getElementById('productIdHidden').value = '';
-    document.getElementById('productReorderLevel').value = 5;
+    skuModalTitle.textContent = 'REGISTER NEW SKU RECORD';
+    document.getElementById('skuHiddenId').value = '';
+    document.getElementById('skuThreshold').value = 5;
   }
-  productModal.classList.remove('hidden');
+  skuModal.classList.remove('hidden');
 }
 
-function handleProductSubmit(e) {
+function handleSkuSubmit(e) {
   e.preventDefault();
-  const idHidden = document.getElementById('productIdHidden').value;
-  const sku = document.getElementById('productSku').value.trim().toUpperCase();
-  const name = document.getElementById('productName').value.trim();
-  const category = document.getElementById('productCategory').value;
-  const price = parseFloat(document.getElementById('productPrice').value) || 0;
-  const quantity = parseInt(document.getElementById('productQuantity').value, 10) || 0;
-  const reorderLevel = parseInt(document.getElementById('productReorderLevel').value, 10) || 5;
-  const supplier = document.getElementById('productSupplier').value.trim();
+  const idHidden = document.getElementById('skuHiddenId').value;
+  const sku = document.getElementById('skuCode').value.trim().toUpperCase();
+  const name = document.getElementById('skuName').value.trim();
+  const category = document.getElementById('skuCategory').value;
+  const price = parseFloat(document.getElementById('skuPrice').value) || 0;
+  const quantity = parseInt(document.getElementById('skuQty').value, 10) || 0;
+  const reorderLevel = parseInt(document.getElementById('skuThreshold').value, 10) || 5;
+  const supplier = document.getElementById('skuSupplier').value.trim();
 
   if (idHidden) {
     const idx = products.findIndex(p => p.id === idHidden);
     if (idx !== -1) {
-      products[idx] = {
-        ...products[idx],
-        sku,
-        name,
-        category,
-        price,
-        quantity,
-        reorderLevel,
-        supplier
-      };
-      showToast('Product updated successfully!', 'success');
+      products[idx] = { ...products[idx], sku, name, category, price, quantity, reorderLevel, supplier };
+      showToast(`SKU ${sku} modified`, 'success');
     }
   } else {
-    const newProd = {
+    const newP = {
       id: 'PRD-' + Math.floor(100 + Math.random() * 900),
       sku,
       name,
@@ -294,52 +213,52 @@ function handleProductSubmit(e) {
       reorderLevel,
       supplier
     };
-    products.unshift(newProd);
-
-    // Record initial movement log
-    if (quantity > 0) {
-      logMovement('IN', newProd.id, newProd.name, quantity, quantity, 'Initial stock entry upon creation');
-    }
-
-    showToast('New product added to inventory!', 'success');
+    products.unshift(newP);
+    logMovement('IN', newP.id, newP.name, quantity, quantity, 'SKU Initial Inbound');
+    showToast(`SKU ${sku} registered in WMS`, 'success');
   }
 
   saveProducts();
-  productModal.classList.add('hidden');
+  skuModal.classList.add('hidden');
   renderAll();
 }
 
-function deleteProduct(id) {
-  const prod = products.find(p => p.id === id);
-  if (!prod) return;
+// Rapid Inline Stepper: direct +1 or -1 from matrix row!
+function stepQuantity(id, delta) {
+  const p = products.find(item => item.id === id);
+  if (!p) return;
 
-  if (confirm(`Are you sure you want to delete ${prod.name} (${prod.sku})?`)) {
-    products = products.filter(p => p.id !== id);
-    saveProducts();
-    renderAll();
-    showToast('Product removed from catalog', 'info');
+  if (delta < 0 && p.quantity <= 0) {
+    showToast(`SKU ${p.sku} is already at zero stock!`, 'error');
+    return;
   }
+
+  const type = delta > 0 ? 'IN' : 'OUT';
+  const qty = Math.abs(delta);
+  p.quantity += delta;
+
+  saveProducts();
+  logMovement(type, p.id, p.name, qty, p.quantity, `Rapid ${type === 'IN' ? 'Restock' : 'Dispatch'} (±1 step)`);
+  renderAll();
 }
 
-function openAdjustModal(productId, type) {
-  const prod = products.find(p => p.id === productId);
-  if (!prod) return;
+function openAdjustModal(id, type) {
+  const p = products.find(item => item.id === id);
+  if (!p) return;
 
   adjustForm.reset();
-  document.getElementById('adjustProductId').value = prod.id;
+  document.getElementById('adjustProdId').value = p.id;
   document.getElementById('adjustType').value = type;
-  adjustProductName.textContent = `${prod.name} (Current: ${prod.quantity} units)`;
+  adjustProdName.textContent = `[${p.sku}] ${p.name} (Cur: ${p.quantity})`;
 
   if (type === 'IN') {
-    adjustModalHeader.className = 'p-5 text-white flex justify-between items-center bg-emerald-600';
-    adjustModalTitle.textContent = 'Stock In (Restock Products)';
-    confirmAdjustBtn.className = 'px-5 py-2 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition';
-    confirmAdjustBtn.textContent = 'Confirm Stock In';
+    adjustHeader.className = 'p-4 bg-emerald-500 text-black flex justify-between items-center font-bold';
+    adjustModalTitle.textContent = 'RESTOCK SHIPMENT (STOCK IN)';
+    confirmAdjustBtn.className = 'px-4 py-1.5 rounded-lg bg-emerald-500 text-black font-bold';
   } else {
-    adjustModalHeader.className = 'p-5 text-white flex justify-between items-center bg-amber-600';
-    adjustModalTitle.textContent = 'Stock Out (Dispatch Products)';
-    confirmAdjustBtn.className = 'px-5 py-2 rounded-xl text-sm font-semibold bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition';
-    confirmAdjustBtn.textContent = 'Confirm Stock Out';
+    adjustHeader.className = 'p-4 bg-amber-500 text-black flex justify-between items-center font-bold';
+    adjustModalTitle.textContent = 'DISPATCH SHIPMENT (STOCK OUT)';
+    confirmAdjustBtn.className = 'px-4 py-1.5 rounded-lg bg-amber-500 text-black font-bold';
   }
 
   adjustModal.classList.remove('hidden');
@@ -347,37 +266,32 @@ function openAdjustModal(productId, type) {
 
 function handleAdjustSubmit(e) {
   e.preventDefault();
-  const prodId = document.getElementById('adjustProductId').value;
+  const id = document.getElementById('adjustProdId').value;
   const type = document.getElementById('adjustType').value;
-  const qty = parseInt(document.getElementById('adjustQuantity').value, 10);
-  const note = document.getElementById('adjustNote').value.trim() || (type === 'IN' ? 'Warehouse restock' : 'Sales order dispatch');
+  const qty = parseInt(document.getElementById('adjustQty').value, 10);
+  const note = document.getElementById('adjustNote').value.trim() || (type === 'IN' ? 'Warehouse PO Delivery' : 'Outbound Dispatch');
 
-  const prod = products.find(p => p.id === prodId);
-  if (!prod) return;
+  const p = products.find(item => item.id === id);
+  if (!p) return;
 
-  if (type === 'OUT' && qty > prod.quantity) {
-    showToast(`Insufficient stock! Cannot dispatch ${qty} units (Only ${prod.quantity} available).`, 'error');
+  if (type === 'OUT' && qty > p.quantity) {
+    showToast(`Cannot dispatch ${qty} units. Only ${p.quantity} available!`, 'error');
     return;
   }
 
-  if (type === 'IN') {
-    prod.quantity += qty;
-  } else {
-    prod.quantity -= qty;
-  }
+  if (type === 'IN') p.quantity += qty;
+  else p.quantity -= qty;
 
   saveProducts();
-  logMovement(type, prod.id, prod.name, qty, prod.quantity, note);
+  logMovement(type, p.id, p.name, qty, p.quantity, note);
 
   adjustModal.classList.add('hidden');
-  showToast(`Stock updated successfully! New quantity: ${prod.quantity}`, 'success');
+  showToast(`Inventory updated: ${p.sku} = ${p.quantity} units`, 'success');
   renderAll();
 }
 
 function logMovement(type, productId, productName, qty, balance, note) {
-  const now = new Date();
-  const dateStr = now.toISOString().replace('T', ' ').substring(0, 16);
-
+  const dateStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
   movements.unshift({
     id: 'MOV-' + Math.floor(100 + Math.random() * 900),
     timestamp: dateStr,
@@ -392,28 +306,24 @@ function logMovement(type, productId, productName, qty, balance, note) {
 }
 
 function renderAll() {
-  updateStats();
+  updateHUD();
   renderProducts();
-  renderMovements();
+  renderTerminal();
 }
 
-function updateStats() {
-  statTotalItems.textContent = products.length;
+function updateHUD() {
+  hudSkus.textContent = products.length;
+  const totalVal = products.reduce((acc, p) => acc + (p.price * p.quantity), 0);
+  hudValuation.textContent = '$' + totalVal.toLocaleString('en-US', { minimumFractionDigits: 2 });
 
-  const totalValuation = products.reduce((acc, p) => acc + (p.price * p.quantity), 0);
-  statTotalValue.textContent = '$' + totalValuation.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-  const lowStockCount = products.filter(p => p.quantity > 0 && p.quantity <= p.reorderLevel).length;
-  statLowStock.textContent = lowStockCount;
-
-  const outOfStockCount = products.filter(p => p.quantity === 0).length;
-  statOutOfStock.textContent = outOfStockCount;
+  const low = products.filter(p => p.quantity <= p.reorderLevel).length;
+  hudLowStock.textContent = `${low} CRITICAL`;
 }
 
 function renderProducts() {
-  const query = searchInventoryInput.value.toLowerCase().trim();
-  const category = categoryFilter.value;
-  const status = stockStatusFilter.value;
+  const query = searchInput.value.toLowerCase().trim();
+  const cat = categoryFilter.value;
+  const stock = stockFilter.value;
 
   const filtered = products.filter(p => {
     const matchesQuery = !query ||
@@ -421,172 +331,158 @@ function renderProducts() {
       p.sku.toLowerCase().includes(query) ||
       (p.supplier && p.supplier.toLowerCase().includes(query));
 
-    const matchesCat = !category || p.category === category;
+    const matchesCat = !cat || p.category === cat;
 
-    let matchesStatus = true;
-    if (status === 'In Stock') matchesStatus = p.quantity > p.reorderLevel;
-    if (status === 'Low Stock') matchesStatus = p.quantity > 0 && p.quantity <= p.reorderLevel;
-    if (status === 'Out of Stock') matchesStatus = p.quantity === 0;
+    let matchesStock = true;
+    if (stock === 'critical') matchesStock = p.quantity <= p.reorderLevel;
+    if (stock === 'normal') matchesStock = p.quantity > p.reorderLevel;
 
-    return matchesQuery && matchesCat && matchesStatus;
+    return matchesQuery && matchesCat && matchesStock;
   });
 
-  inventoryTableBody.innerHTML = '';
+  productGrid.innerHTML = '';
   if (filtered.length === 0) {
-    inventoryEmptyState.classList.remove('hidden');
-    inventoryCountLabel.textContent = `Showing 0 of ${products.length} products`;
+    emptyState.classList.remove('hidden');
     return;
   }
-
-  inventoryEmptyState.classList.add('hidden');
-  inventoryCountLabel.textContent = `Showing ${filtered.length} of ${products.length} products`;
+  emptyState.classList.add('hidden');
 
   filtered.forEach(p => {
-    const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-50/80 transition-colors border-b border-slate-100';
+    const isOut = p.quantity === 0;
+    const isLow = p.quantity > 0 && p.quantity <= p.reorderLevel;
 
-    let statusBadge = '';
-    if (p.quantity === 0) {
-      statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-700 border border-rose-200">Out of Stock</span>';
-    } else if (p.quantity <= p.reorderLevel) {
-      statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">Low Stock</span>';
-    } else {
-      statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">In Stock</span>';
-    }
+    const row = document.createElement('div');
+    row.className = `p-4 rounded-xl border transition flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+      isOut ? 'bg-rose-950/20 border-rose-900/40' : isLow ? 'bg-amber-950/20 border-amber-900/40' : 'bg-[#111827] border-slate-800'
+    }`;
 
-    const itemTotalValue = (p.price * p.quantity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    row.innerHTML = `
+      <div class="flex items-center space-x-3 min-w-0">
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+          isOut ? 'bg-rose-500/20 text-rose-400' : isLow ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-400'
+        }">
+          <i class="fa-solid fa-box text-sm"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center space-x-2">
+            <span class="font-mono text-xs font-bold text-amber-400">${p.sku}</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">${p.category}</span>
+          </div>
+          <h4 class="font-bold text-sm text-white truncate mt-0.5">${escapeHtml(p.name)}</h4>
+          <p class="text-[11px] text-slate-400 font-mono">
+            Unit: $${p.price.toFixed(2)} • Reorder Threshold: ${p.reorderLevel} • Total: <strong class="text-slate-200">$${(p.price * p.quantity).toFixed(2)}</strong>
+          </p>
+        </div>
+      </div>
 
-    tr.innerHTML = `
-      <td class="py-4 px-6">
-        <div class="font-bold text-slate-800">${escapeHtml(p.name)}</div>
-        <div class="text-xs text-slate-400 font-mono mt-0.5">SKU: <span class="font-semibold text-slate-600">${p.sku}</span> ${p.supplier ? '• ' + escapeHtml(p.supplier) : ''}</div>
-      </td>
-      <td class="py-4 px-6">
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
-          ${escapeHtml(p.category)}
-        </span>
-      </td>
-      <td class="py-4 px-6 text-right font-medium text-slate-800">
-        $${p.price.toFixed(2)}
-      </td>
-      <td class="py-4 px-6 text-center font-bold">
-        <span class="${p.quantity === 0 ? 'text-rose-600' : (p.quantity <= p.reorderLevel ? 'text-amber-600' : 'text-slate-800')}">${p.quantity}</span>
-        <span class="text-slate-400 text-xs block font-normal">Min: ${p.reorderLevel}</span>
-      </td>
-      <td class="py-4 px-6 text-center">
-        ${statusBadge}
-      </td>
-      <td class="py-4 px-6 text-right font-semibold text-purple-700">
-        $${itemTotalValue}
-      </td>
-      <td class="py-4 px-6 text-right space-x-1.5 whitespace-nowrap">
-        <button onclick="openAdjustModal('${p.id}', 'IN')" title="Stock In / Restock" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition inline-flex items-center justify-center">
-          <i class="fa-solid fa-arrow-down"></i>
-        </button>
-        <button onclick="openAdjustModal('${p.id}', 'OUT')" title="Stock Out / Dispatch" class="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition inline-flex items-center justify-center">
-          <i class="fa-solid fa-arrow-up"></i>
-        </button>
-        <button onclick="editProduct('${p.id}')" title="Edit Product" class="w-8 h-8 rounded-lg text-slate-500 hover:text-purple-600 hover:bg-purple-50 transition inline-flex items-center justify-center">
-          <i class="fa-solid fa-pen-to-square"></i>
-        </button>
-        <button onclick="deleteProduct('${p.id}')" title="Delete Product" class="w-8 h-8 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition inline-flex items-center justify-center">
-          <i class="fa-solid fa-trash"></i>
-        </button>
-      </td>
+      <!-- Live Stepper & Bulk Controls -->
+      <div class="flex items-center space-x-3 shrink-0 justify-between md:justify-end">
+        <!-- Rapid Inline Stepper (- / +) -->
+        <div class="flex items-center bg-[#0b0f19] border border-slate-700 rounded-lg p-0.5 font-mono">
+          <button onclick="stepQuantity('${p.id}', -1)" title="Rapid Dispatch -1" class="w-7 h-7 rounded hover:bg-slate-800 text-slate-300 hover:text-rose-400 font-bold transition flex items-center justify-center">
+            -
+          </button>
+          <span class="w-12 text-center text-xs font-bold ${isOut ? 'text-rose-400' : isLow ? 'text-amber-400' : 'text-emerald-400'}">
+            ${p.quantity}
+          </span>
+          <button onclick="stepQuantity('${p.id}', 1)" title="Rapid Restock +1" class="w-7 h-7 rounded hover:bg-slate-800 text-slate-300 hover:text-emerald-400 font-bold transition flex items-center justify-center">
+            +
+          </button>
+        </div>
+
+        <!-- Bulk Modal Buttons -->
+        <div class="flex items-center space-x-1.5 font-mono text-xs">
+          <button onclick="openAdjustModal('${p.id}', 'IN')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition text-[11px]">
+            +Bulk In
+          </button>
+          <button onclick="openAdjustModal('${p.id}', 'OUT')" class="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 transition text-[11px]">
+            -Bulk Out
+          </button>
+          <button onclick="editSku('${p.id}')" class="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-pen text-xs"></i>
+          </button>
+          <button onclick="deleteSku('${p.id}')" class="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-rose-400 transition">
+            <i class="fa-solid fa-trash text-xs"></i>
+          </button>
+        </div>
+      </div>
     `;
-    inventoryTableBody.appendChild(tr);
+    productGrid.appendChild(row);
   });
 }
 
-function renderMovements() {
-  movementTableBody.innerHTML = '';
+function renderTerminal() {
+  terminalContainer.innerHTML = '';
   if (movements.length === 0) {
-    logEmptyState.classList.remove('hidden');
+    terminalContainer.innerHTML = `<div class="text-slate-600 text-center py-8">NO ACTIVITY TELEMETRY RECORDED</div>`;
     return;
   }
 
-  logEmptyState.classList.add('hidden');
+  movements.slice(0, 30).forEach(m => {
+    const isIN = m.type === 'IN';
+    const item = document.createElement('div');
+    item.className = 'p-2 rounded bg-[#0b0f19] border border-slate-800/80 leading-relaxed';
 
-  movements.forEach(m => {
-    const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-50/80 transition-colors border-b border-slate-100 text-xs';
-
-    const isStockIn = m.type === 'IN';
-    const typeBadge = isStockIn
-      ? '<span class="px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800"><i class="fa-solid fa-arrow-down mr-1"></i>Stock In</span>'
-      : '<span class="px-2 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-800"><i class="fa-solid fa-arrow-up mr-1"></i>Stock Out</span>';
-
-    tr.innerHTML = `
-      <td class="py-3 px-6 text-slate-500 font-mono">${m.timestamp}</td>
-      <td class="py-3 px-6">${typeBadge}</td>
-      <td class="py-3 px-6 font-semibold text-slate-800">${escapeHtml(m.productName)}</td>
-      <td class="py-3 px-6 text-center font-bold ${isStockIn ? 'text-emerald-600' : 'text-amber-600'}">
-        ${isStockIn ? '+' : '-'}${m.quantity}
-      </td>
-      <td class="py-3 px-6 text-center font-semibold text-slate-700">${m.balance}</td>
-      <td class="py-3 px-6 text-slate-500">${escapeHtml(m.note || '-')}</td>
+    item.innerHTML = `
+      <div class="flex items-center justify-between text-[10px]">
+        <span class="${isIN ? 'text-emerald-400' : 'text-amber-400'} font-bold">
+          [${isIN ? 'RESTOCK / INBOUND' : 'DISPATCH / OUTBOUND'}]
+        </span>
+        <span class="text-slate-500">${m.timestamp}</span>
+      </div>
+      <div class="text-white text-[11px] truncate mt-0.5">${escapeHtml(m.productName)}</div>
+      <div class="text-[10px] text-slate-400 flex justify-between mt-1 pt-1 border-t border-slate-800">
+        <span>DELTA: <strong class="${isIN ? 'text-emerald-400' : 'text-amber-400'}">${isIN ? '+' : '-'}${m.quantity}</strong> (BAL: ${m.balance})</span>
+        <span class="text-slate-500 truncate max-w-[140px]">${escapeHtml(m.note || '-')}</span>
+      </div>
     `;
-    movementTableBody.appendChild(tr);
+    terminalContainer.appendChild(item);
   });
 }
 
-function editProduct(id) {
+function editSku(id) {
   const p = products.find(item => item.id === id);
-  if (p) openProductModal(p);
+  if (p) openSkuModal(p);
+}
+
+function deleteSku(id) {
+  const p = products.find(item => item.id === id);
+  if (!p) return;
+
+  if (confirm(`Decommission SKU ${p.sku} from active warehouse?`)) {
+    products = products.filter(item => item.id !== id);
+    saveProducts();
+    renderAll();
+    showToast(`SKU ${p.sku} decommissioned`, 'info');
+  }
 }
 
 function exportInventoryCsv() {
-  if (products.length === 0) {
-    showToast('No inventory records to export!', 'error');
-    return;
-  }
-
-  const headers = ['Product ID', 'SKU', 'Product Name', 'Category', 'Unit Price ($)', 'Current Quantity', 'Reorder Level', 'Total Value ($)', 'Supplier'];
+  if (products.length === 0) return;
+  const headers = ['SKU', 'Product Name', 'Category', 'Unit Price ($)', 'Quantity', 'Reorder Level', 'Total Value ($)', 'Supplier'];
   const rows = products.map(p => [
-    p.id,
-    `"${p.sku}"`,
-    `"${p.name}"`,
-    `"${p.category}"`,
-    p.price.toFixed(2),
-    p.quantity,
-    p.reorderLevel,
-    (p.price * p.quantity).toFixed(2),
-    `"${p.supplier || ''}"`
+    `"${p.sku}"`, `"${p.name}"`, `"${p.category}"`, p.price.toFixed(2), p.quantity, p.reorderLevel, (p.price * p.quantity).toFixed(2), `"${p.supplier || ''}"`
   ]);
-
-  const csvContent = 'data:text/csv;charset=utf-8,' + 
-    [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-
-  const encodedUri = encodeURI(csvContent);
+  const csv = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
   const link = document.createElement('a');
-  link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `Inventory_Report_${new Date().toISOString().split('T')[0]}.csv`);
+  link.setAttribute('href', encodeURI(csv));
+  link.setAttribute('download', `StockMaster_Inventory_${new Date().toISOString().split('T')[0]}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-
-  showToast('Inventory CSV Valuation Report exported successfully!', 'success');
+  showToast('Inventory CSV exported', 'success');
 }
 
 function showToast(message, type = 'info') {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
-  
-  const icon = type === 'success' ? 'fa-circle-check text-emerald-500' : 
-               type === 'error' ? 'fa-triangle-exclamation text-rose-500' : 'fa-circle-info text-purple-500';
-  
-  toast.className = 'toast-enter pointer-events-auto bg-white border border-slate-200 shadow-xl px-4 py-3 rounded-xl flex items-center space-x-3 text-sm text-slate-700 min-w-[280px] max-w-sm';
-  toast.innerHTML = `
-    <i class="fa-solid ${icon} text-lg"></i>
-    <span class="flex-1 font-medium">${message}</span>
-  `;
-
+  toast.className = 'toast-enter pointer-events-auto bg-[#111827] text-white shadow-xl px-4 py-2.5 rounded-xl flex items-center space-x-2.5 text-xs min-w-[240px] border border-amber-500/40 font-mono';
+  toast.innerHTML = `<i class="fa-solid fa-microchip text-amber-400"></i><span class="font-medium">${message}</span>`;
   container.appendChild(toast);
-
   setTimeout(() => {
-    toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
+    toast.classList.add('opacity-0', 'transition-opacity', 'duration-200');
+    setTimeout(() => toast.remove(), 200);
+  }, 2500);
 }
 
 function escapeHtml(string) {
@@ -599,6 +495,7 @@ function escapeHtml(string) {
     .replace(/'/g, '&#039;');
 }
 
+window.stepQuantity = stepQuantity;
 window.openAdjustModal = openAdjustModal;
-window.editProduct = editProduct;
-window.deleteProduct = deleteProduct;
+window.editSku = editSku;
+window.deleteSku = deleteSku;

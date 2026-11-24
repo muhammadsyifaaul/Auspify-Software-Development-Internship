@@ -1,11 +1,11 @@
 # Task 5: Online Examination System (ExamVerse Pro)
 
-## 📌 Overview
+##  Overview
 ExamVerse Pro is an advanced, responsive web application for conducting and grading timed online assessments. Developed as the Capstone Task 5 of the **Auspify Technologies Software Development Internship**, it features candidate authentication, dynamic assessment catalog loading (via API/JSON), an interactive exam room with real-time countdown timers, question palettes, automated score calculations, and printable certificates of completion.
 
 ---
 
-## 🚀 Features Implemented
+##  Features Implemented
 - **Candidate Authentication & Profile**:
   - Full session handling (Name, Candidate ID, Email) for tracking scores and certificates.
 - **Dynamic Assessment Catalog (API Integration)**:
@@ -26,7 +26,7 @@ ExamVerse Pro is an advanced, responsive web application for conducting and grad
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 - **HTML5 & Semantic Structure**
 - **Tailwind CSS**
 - **JavaScript (ES6+)**
@@ -35,7 +35,7 @@ ExamVerse Pro is an advanced, responsive web application for conducting and grad
 
 ---
 
-## 💻 How to Run
+##  How to Run
 1. Navigate to `Task-5_Online_Examination_System`.
 2. Double-click `index.html` or serve via local server:
    ```bash

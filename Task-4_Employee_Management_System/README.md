@@ -1,11 +1,11 @@
 # Task 4: Employee Management System (StaffPulse Pro)
 
-## 📌 Overview
+##  Overview
 StaffPulse Pro is an enterprise-grade Employee Management & HR Organization Suite created for the **Auspify Technologies Software Development Internship**. It offers comprehensive personnel directory management, department budget & headcount allocation, payroll analytics, and report export.
 
 ---
 
-## 🚀 Features Implemented
+##  Features Implemented
 - **Employee Directory & Profile Management**:
   - Full CRUD operations: Code, Full Name, Corporate Email, Phone, Department, Role, Monthly Salary, Employment Type, Status, Date Joined.
   - Interactive Employee Profile Card drawer with quick contact and role summary.
@@ -26,7 +26,7 @@ StaffPulse Pro is an enterprise-grade Employee Management & HR Organization Suit
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 - **HTML5 & Responsive Semantics**
 - **Tailwind CSS**
 - **JavaScript (ES6+)**
@@ -34,6 +34,6 @@ StaffPulse Pro is an enterprise-grade Employee Management & HR Organization Suit
 
 ---
 
-## 💻 How to Run
+##  How to Run
 1. Navigate to `Task-4_Employee_Management_System`.
 2. Double click `index.html` or open in any web browser.

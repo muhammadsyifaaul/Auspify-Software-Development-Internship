@@ -1,11 +1,11 @@
 # Task 1: Student Management System (EduTrack Pro)
 
-## 📌 Overview
+##  Overview
 EduTrack Pro is a modern, responsive web application designed to manage student records efficiently for educational institutions. Developed as part of the **Auspify Technologies Software Development Internship**.
 
 ---
 
-## 🚀 Features Implemented
+##  Features Implemented
 - **CRUD Operations**:
   - **Add Student**: Register new students with validation (ID/NIM, Full Name, Email, Phone, Department, GPA, Enrollment Date, Status).
   - **View Student**: Interactive Student Profile Modal with GPA indicator and contact details.
@@ -27,7 +27,7 @@ EduTrack Pro is a modern, responsive web application designed to manage student 
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 - **HTML5 & Modern Semantic Elements**
 - **Tailwind CSS (via CDN)** for responsive, utility-first styling
 - **JavaScript (ES6+)** with modular state management
@@ -35,7 +35,7 @@ EduTrack Pro is a modern, responsive web application designed to manage student 
 
 ---
 
-## 💻 How to Run
+##  How to Run
 1. Open the project folder: `Task-1_Student_Management_System`.
 2. Double click `index.html` or open it with any web browser (Chrome, Edge, Firefox).
 3. (Optional) Run with local server:

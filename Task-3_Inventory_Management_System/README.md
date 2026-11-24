@@ -1,11 +1,11 @@
 # Task 3: Inventory Management System (StockMaster Pro)
 
-## 📌 Overview
+##  Overview
 StockMaster Pro is a robust, responsive inventory management application developed for the **Auspify Technologies Software Development Internship**. It empowers businesses to track products, monitor stock thresholds, log stock movements (in/out), calculate total asset valuation, and generate instant inventory audit reports.
 
 ---
 
-## 🚀 Features Implemented
+##  Features Implemented
 - **Inventory Product Management**:
   - Full CRUD for products: SKU Code, Name, Category, Unit Price, Stock Quantity, Reorder Threshold, Supplier.
 - **Stock Movement & Quick Adjustments**:
@@ -27,7 +27,7 @@ StockMaster Pro is a robust, responsive inventory management application develop
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 - **HTML5 & Modern Layouts**
 - **Tailwind CSS**
 - **JavaScript (ES6+)**
@@ -35,6 +35,6 @@ StockMaster Pro is a robust, responsive inventory management application develop
 
 ---
 
-## 💻 How to Run
+##  How to Run
 1. Navigate to `Task-3_Inventory_Management_System`.
 2. Double click `index.html` or open in any browser.
