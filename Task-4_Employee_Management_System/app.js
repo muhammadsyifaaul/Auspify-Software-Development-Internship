@@ -414,45 +414,52 @@ function renderOrgChart() {
         <h3 class="font-bold text-sm mt-0.5">Auspify Executive Board</h3>
         <p class="text-[11px] text-slate-300 mt-1">${employees.length} Total Registered Personnel</p>
       </div>
-
-      <!-- Vertical Stem from Executive directly to horizontal busbar -->
-      <div class="w-0.5 h-8 bg-sky-400"></div>
     </div>
 
-    <!-- Tree Distribution Network -->
-    <div class="relative w-full max-w-6xl mx-auto -mt-0.5">
-      <!-- Continuous Horizontal Connecting Busbar spanning all 5 divisions -->
-      <div class="hidden lg:block absolute top-0 left-[10%] right-[10%] h-0.5 bg-sky-300"></div>
+    <!-- Continuous SVG Tree Connector System (100% Unbroken Lines) -->
+    <div class="w-full max-w-6xl mx-auto hidden lg:block -mt-1">
+      <svg viewBox="0 0 1000 60" preserveAspectRatio="none" class="w-full h-12 stroke-sky-400 fill-none" style="stroke-width: 2.5px;">
+        <!-- Vertical Stem from Executive down to the horizontal busbar -->
+        <line x1="500" y1="0" x2="500" y2="30" />
+        <!-- Horizontal busbar connecting all 5 department branches -->
+        <line x1="100" y1="30" x2="900" y2="30" />
+        <!-- Vertical drop lines directly touching each of the 5 department cards -->
+        <line x1="100" y1="30" x2="100" y2="60" />
+        <line x1="300" y1="30" x2="300" y2="60" />
+        <line x1="500" y1="30" x2="500" y2="60" />
+        <line x1="700" y1="30" x2="700" y2="60" />
+        <line x1="900" y1="30" x2="900" y2="60" />
+      </svg>
+    </div>
 
-      <!-- 5 Connected Department Columns -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 pt-0">
-        ${depts.map(d => {
-          const team = employees.filter(e => e.department === d);
-          return `
-            <div class="flex flex-col items-center">
-              <!-- Unbroken Vertical Connecting Drop-line into department box -->
-              <div class="hidden lg:block w-0.5 h-6 bg-sky-300"></div>
+    <!-- 5 Connected Department Columns -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 max-w-6xl mx-auto -mt-1">
+      ${depts.map((d, idx) => {
+        const team = employees.filter(e => e.department === d);
+        return `
+          <div class="w-full">
+            <!-- Mobile/Tablet Top Connector Pin -->
+            <div class="lg:hidden w-0.5 h-4 bg-sky-400 mx-auto mb-1"></div>
 
-              <!-- Department Box Node -->
-              <div class="w-full bg-slate-50 p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs text-xs space-y-2.5">
-                <div class="flex items-center justify-between border-b border-slate-200/80 pb-2">
-                  <span class="font-bold text-slate-900 truncate">${d}</span>
-                  <span class="text-[10px] bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded-full shrink-0">${team.length}</span>
-                </div>
-                <div class="space-y-2">
-                  ${team.length ? team.map(m => `
-                    <div class="bg-white p-2.5 rounded-xl border border-slate-200/70 shadow-2xs">
-                      <h5 class="font-bold text-slate-900 text-xs truncate">${escapeHtml(m.name)}</h5>
-                      <p class="text-[10px] text-sky-600 font-medium truncate">${escapeHtml(m.role)}</p>
-                      <span class="text-[9px] font-mono text-slate-400 mt-1 block">${m.type}</span>
-                    </div>
-                  `).join('') : '<p class="text-slate-400 text-[11px] py-1 text-center font-medium">No personnel</p>'}
-                </div>
+            <!-- Department Box Node -->
+            <div class="w-full bg-slate-50 p-3.5 rounded-2xl border-2 border-sky-200/90 hover:border-sky-400 shadow-2xs text-xs space-y-2.5 transition">
+              <div class="flex items-center justify-between border-b border-slate-200/80 pb-2">
+                <span class="font-bold text-slate-900 truncate">${d}</span>
+                <span class="text-[10px] bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded-full shrink-0">${team.length}</span>
+              </div>
+              <div class="space-y-2">
+                ${team.length ? team.map(m => `
+                  <div class="bg-white p-2.5 rounded-xl border border-slate-200/70 shadow-2xs">
+                    <h5 class="font-bold text-slate-900 text-xs truncate">${escapeHtml(m.name)}</h5>
+                    <p class="text-[10px] text-sky-600 font-medium truncate">${escapeHtml(m.role)}</p>
+                    <span class="text-[9px] font-mono text-slate-400 mt-1 block">${m.type}</span>
+                  </div>
+                `).join('') : '<p class="text-slate-400 text-[11px] py-1 text-center font-medium">No personnel</p>'}
               </div>
             </div>
-          `;
-        }).join('')}
-      </div>
+          </div>
+        `;
+      }).join('')}
     </div>
   `;
 }
